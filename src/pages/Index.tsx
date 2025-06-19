@@ -3,180 +3,176 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    email: '',
-    dni: '',
+  const [loginData, setLoginData] = useState({ identifier: '', password: '' });
+  const [registerData, setRegisterData] = useState({ 
+    name: '', 
+    email: '', 
+    dni: '', 
     password: '',
-    name: '',
-    organizationName: ''
+    confirmPassword: ''
   });
 
-  const handleAuth = () => {
-    console.log('Autenticando usuario:', { ...formData, isLogin });
-    
-    // Validación básica
-    if (isLogin) {
-      if (!formData.email && !formData.dni) {
-        toast.error('Ingresa tu email o DNI');
-        return;
-      }
-      if (!formData.password) {
-        toast.error('Ingresa tu contraseña');
-        return;
-      }
-    } else {
-      if (!formData.name || !formData.email || !formData.dni || !formData.password) {
-        toast.error('Completa todos los campos obligatorios');
-        return;
-      }
+  const handleLogin = () => {
+    if (!loginData.identifier || !loginData.password) {
+      toast.error('Por favor, completa todos los campos');
+      return;
     }
+
+    // Simular autenticación
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userEmail', loginData.email || loginData.identifier);
+    localStorage.setItem('userName', loginData.identifier);
     
-    // Simulamos autenticación exitosa
-    localStorage.setItem('userId', '1');
-    localStorage.setItem('userName', formData.name || formData.email || formData.dni);
-    localStorage.setItem('userEmail', formData.email);
-    localStorage.setItem('userDni', formData.dni);
+    toast.success('¡Bienvenido a Accoro!');
+    navigate('/welcome');
+  };
+
+  const handleRegister = () => {
+    if (!registerData.name || !registerData.email || !registerData.dni || !registerData.password) {
+      toast.error('Por favor, completa todos los campos');
+      return;
+    }
+
+    if (registerData.password !== registerData.confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+
+    // Simular registro
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userEmail', registerData.email);
+    localStorage.setItem('userName', registerData.name);
+    localStorage.setItem('userDNI', registerData.dni);
     
-    toast.success(isLogin ? '¡Sesión iniciada!' : '¡Registro exitoso!');
-    
-    // Redirigir a la página de bienvenida
+    toast.success('¡Cuenta creada exitosamente!');
     navigate('/welcome');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">TicketPro</h1>
-          <p className="text-gray-600">Sistema de gestión de eventos y entradas</p>
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-4">
+            Accoro
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Tu plataforma de eventos inteligente
+          </p>
         </div>
 
-        <Card className="shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-center">
-              {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {isLogin 
-                ? 'Ingresa con tu email o DNI' 
-                : 'Crea tu cuenta para acceder a todos los modos'
-              }
-            </CardDescription>
+        <Card className="card-gradient startup-shadow border-border/50">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl">Bienvenido</CardTitle>
+            <CardDescription>Inicia sesión o crea tu cuenta</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={isLogin ? 'login' : 'register'} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login" onClick={() => setIsLogin(true)}>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-secondary/50">
+                <TabsTrigger value="login" className="data-[state=active]:bg-primary">
                   Iniciar Sesión
                 </TabsTrigger>
-                <TabsTrigger value="register" onClick={() => setIsLogin(false)}>
+                <TabsTrigger value="register" className="data-[state=active]:bg-primary">
                   Registrarse
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="login" className="space-y-4 mt-6">
+              <TabsContent value="login" className="mt-6 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="emailOrDni">Email o DNI</Label>
+                  <Label htmlFor="identifier">Email o DNI</Label>
                   <Input
-                    id="emailOrDni"
+                    id="identifier"
                     type="text"
-                    placeholder="usuario@email.com o 12345678"
-                    value={formData.email || formData.dni}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Si contiene @ es email, sino es DNI
-                      if (value.includes('@')) {
-                        setFormData({...formData, email: value, dni: ''});
-                      } else {
-                        setFormData({...formData, dni: value, email: ''});
-                      }
-                    }}
+                    placeholder="tu@email.com o 12345678"
+                    value={loginData.identifier}
+                    onChange={(e) => setLoginData({...loginData, identifier: e.target.value})}
+                    className="bg-secondary/50 border-border"
                   />
                 </div>
-                
                 <div className="space-y-2">
                   <Label htmlFor="password">Contraseña</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                    className="bg-secondary/50 border-border"
                   />
                 </div>
-                
-                <Button onClick={handleAuth} className="w-full bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  onClick={handleLogin} 
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
                   Iniciar Sesión
                 </Button>
               </TabsContent>
               
-              <TabsContent value="register" className="space-y-4 mt-6">
+              <TabsContent value="register" className="mt-6 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nombre Completo *</Label>
+                  <Label htmlFor="name">Nombre completo</Label>
                   <Input
                     id="name"
                     type="text"
                     placeholder="Juan Pérez"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    value={registerData.name}
+                    onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                    className="bg-secondary/50 border-border"
                   />
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="usuario@email.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="tu@email.com"
+                    value={registerData.email}
+                    onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                    className="bg-secondary/50 border-border"
                   />
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="dni">DNI *</Label>
+                  <Label htmlFor="dni">DNI</Label>
                   <Input
                     id="dni"
                     type="text"
                     placeholder="12345678"
-                    value={formData.dni}
-                    onChange={(e) => setFormData({...formData, dni: e.target.value})}
+                    value={registerData.dni}
+                    onChange={(e) => setRegisterData({...registerData, dni: e.target.value})}
+                    className="bg-secondary/50 border-border"
                   />
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="organizationName">Nombre de Organización (opcional)</Label>
+                  <Label htmlFor="registerPassword">Contraseña</Label>
                   <Input
-                    id="organizationName"
-                    type="text"
-                    placeholder="Mi Empresa de Eventos"
-                    value={formData.organizationName}
-                    onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
-                  />
-                  <p className="text-xs text-gray-500">Solo si planeas organizar eventos</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña *</Label>
-                  <Input
-                    id="password"
+                    id="registerPassword"
                     type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    value={registerData.password}
+                    onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                    className="bg-secondary/50 border-border"
                   />
                 </div>
-                
-                <Button onClick={handleAuth} className="w-full bg-green-600 hover:bg-green-700">
-                  Registrarse
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={registerData.confirmPassword}
+                    onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                    className="bg-secondary/50 border-border"
+                  />
+                </div>
+                <Button 
+                  onClick={handleRegister} 
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Crear Cuenta
                 </Button>
               </TabsContent>
             </Tabs>

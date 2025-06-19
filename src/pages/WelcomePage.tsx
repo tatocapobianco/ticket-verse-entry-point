@@ -30,51 +30,62 @@ const WelcomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-6">
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Bienvenido/a, {userName}</h1>
-          <p className="text-gray-600">Selecciona el modo en el que deseas ingresar</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-2">
+            Bienvenido/a, {userName}
+          </h1>
+          <p className="text-muted-foreground text-lg">¿Cómo quieres usar Accoro hoy?</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleModeSelection('buyer')}>
+          <Card 
+            className="card-gradient startup-shadow border-border/50 hover:border-primary/50 transition-all cursor-pointer group" 
+            onClick={() => handleModeSelection('buyer')}
+          >
             <CardHeader className="text-center">
-              <Calendar className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-              <CardTitle>Mis Eventos</CardTitle>
-              <CardDescription>Ver y comprar entradas para eventos</CardDescription>
+              <Calendar className="h-12 w-12 mx-auto mb-4 text-primary group-hover:scale-110 transition-transform" />
+              <CardTitle className="text-xl">Mis Eventos</CardTitle>
+              <CardDescription>Descubre y compra entradas</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                 Ir a mis eventos
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleModeSelection('organizer')}>
+          <Card 
+            className="card-gradient startup-shadow border-border/50 hover:border-green-500/50 transition-all cursor-pointer group" 
+            onClick={() => handleModeSelection('organizer')}
+          >
             <CardHeader className="text-center">
-              <Users className="h-12 w-12 mx-auto mb-4 text-green-600" />
-              <CardTitle>Modo Organizador</CardTitle>
-              <CardDescription>Gestionar eventos, entradas y cortesías</CardDescription>
+              <Users className="h-12 w-12 mx-auto mb-4 text-green-500 group-hover:scale-110 transition-transform" />
+              <CardTitle className="text-xl">Modo Organizador</CardTitle>
+              <CardDescription>Crea y gestiona eventos</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-green-600 hover:bg-green-700">
+              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                 Modo organizador
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleModeSelection('scanner')}>
+          <Card 
+            className="card-gradient startup-shadow border-border/50 hover:border-purple-500/50 transition-all cursor-pointer group" 
+            onClick={() => handleModeSelection('scanner')}
+          >
             <CardHeader className="text-center">
-              <QrCode className="h-12 w-12 mx-auto mb-4 text-purple-600" />
-              <CardTitle>Modo Escaneador</CardTitle>
-              <CardDescription>Escanear QR en la puerta del evento</CardDescription>
+              <QrCode className="h-12 w-12 mx-auto mb-4 text-purple-500 group-hover:scale-110 transition-transform" />
+              <CardTitle className="text-xl">Modo Escaneador</CardTitle>
+              <CardDescription>Valida entradas en eventos</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-purple-600 hover:bg-purple-700">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                 Modo escaneador
               </Button>
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-muted-foreground mt-2 text-center">
                 Requiere autorización del evento
               </p>
             </CardContent>
@@ -82,7 +93,7 @@ const WelcomePage = () => {
         </div>
 
         <div className="text-center">
-          <Button variant="ghost" onClick={handleLogout} className="text-gray-600">
+          <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
             Cerrar Sesión
           </Button>
         </div>
