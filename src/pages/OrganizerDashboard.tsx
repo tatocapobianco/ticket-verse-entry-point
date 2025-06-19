@@ -403,7 +403,7 @@ const OrganizerDashboard = () => {
                           variant="outline"
                           onClick={() => {
                             setSelectedEvent(event);
-                            setCourtesyData({...courtesyData, eventId: event.id});
+                            setCourtesyData({...courtesyData, eventId: String(event.id)});
                             setShowCourtesy(true);
                           }}
                           className="border-border hover:bg-secondary"
@@ -633,7 +633,7 @@ const OrganizerDashboard = () => {
                       >
                         <option value="">Seleccionar evento</option>
                         {myEvents.map((event) => (
-                          <option key={event.id} value={event.id}>
+                          <option key={event.id} value={String(event.id)}>
                             {event.name}
                           </option>
                         ))}

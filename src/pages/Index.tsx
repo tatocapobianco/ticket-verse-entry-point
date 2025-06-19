@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,7 @@ const Index = () => {
 
     // Simular autenticación
     localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('userEmail', loginData.email || loginData.identifier);
+    localStorage.setItem('userEmail', loginData.identifier);
     localStorage.setItem('userName', loginData.identifier);
     
     toast.success('¡Bienvenido a Accoro!');
