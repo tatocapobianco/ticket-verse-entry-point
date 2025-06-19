@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart } from 'lucide-react';
+import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const OrganizerDashboard = () => {
@@ -20,6 +20,7 @@ const OrganizerDashboard = () => {
   const [showCourtesy, setShowCourtesy] = useState(false);
   const [showTickets, setShowTickets] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showEditEvent, setShowEditEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   
   const [newEvent, setNewEvent] = useState({
@@ -31,6 +32,33 @@ const OrganizerDashboard = () => {
     image: '',
     eventNumber: '',
     accessKey: ''
+  });
+
+  const [editingEvent, setEditingEvent] = useState({
+    type: 'public',
+    name: '',
+    customUrl: '',
+    adultOnly: false,
+    minAge: '',
+    showDateOnTicket: true,
+    category: '',
+    participants: '',
+    description: '',
+    itinerary: '',
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '23:59',
+    province: '',
+    city: '',
+    address: '',
+    venue: '',
+    promoVideoUrl: '',
+    spotifyUrl: '',
+    mainImage: '',
+    topBanner: '',
+    emailBanner: '',
+    ticketOrder: 'price_desc'
   });
 
   const [newTicket, setNewTicket] = useState({
@@ -227,6 +255,62 @@ const OrganizerDashboard = () => {
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
+  };
+
+  const handleEditEvent = (event) => {
+    setSelectedEvent(event);
+    setEditingEvent({
+      type: 'public',
+      name: event.name,
+      customUrl: `evento-${event.id}`,
+      adultOnly: false,
+      minAge: '',
+      showDateOnTicket: true,
+      category: '',
+      participants: '',
+      description: event.description,
+      itinerary: '',
+      startDate: event.date,
+      startTime: event.time,
+      endDate: event.date,
+      endTime: '23:59',
+      province: '',
+      city: '',
+      address: event.location,
+      venue: event.location,
+      promoVideoUrl: '',
+      spotifyUrl: '',
+      mainImage: event.image || '',
+      topBanner: '',
+      emailBanner: '',
+      ticketOrder: 'price_desc'
+    });
+    setShowEditEvent(true);
+  };
+
+  const handleSaveEditEvent = () => {
+    if (!editingEvent.name || !editingEvent.startDate || !editingEvent.startTime) {
+      toast.error('Por favor, completa todos los campos obligatorios');
+      return;
+    }
+
+    // Update the event in the state
+    setMyEvents(prev => prev.map(event => 
+      event.id === selectedEvent.id 
+        ? { 
+            ...event, 
+            name: editingEvent.name,
+            description: editingEvent.description,
+            date: editingEvent.startDate,
+            time: editingEvent.startTime,
+            location: editingEvent.venue || editingEvent.address,
+            image: editingEvent.mainImage
+          }
+        : event
+    ));
+
+    toast.success('Evento actualizado exitosamente');
+    setShowEditEvent(false);
   };
 
   const handleLogout = () => {
@@ -460,6 +544,7 @@ const OrganizerDashboard = () => {
                         <Button 
                           size="sm" 
                           variant="outline"
+                          onClick={() => handleEditEvent(event)}
                           className="border-border hover:bg-secondary col-span-2"
                         >
                           <Settings className="h-4 w-4 mr-1" />
@@ -471,6 +556,356 @@ const OrganizerDashboard = () => {
                 </Card>
               ))}
             </div>
+
+            {/* Edit Event Dialog */}
+            <Dialog open={showEditEvent} onOpenChange={setShowEditEvent}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle>Editar Evento - {selectedEvent?.name}</DialogTitle>
+                  <DialogDescription>
+                    Configura todos los aspectos de tu evento
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <Tabs defaultValue="general" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 bg-secondary/50">
+                    <TabsTrigger value="general">General</TabsTrigger>
+                    <TabsTrigger value="datetime">Fechas</TabsTrigger>
+                    <TabsTrigger value="location">Ubicación</TabsTrigger>
+                    <TabsTrigger value="media">Multimedia</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="general" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="eventType">Tipo de evento</Label>
+                        <select
+                          id="eventType"
+                          value={editingEvent.type}
+                          onChange={(e) => setEditingEvent({...editingEvent, type: e.target.value})}
+                          className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm"
+                        >
+                          <option value="public">Público</option>
+                          <option value="private">Privado</option>
+                        </select>
+                        {editingEvent.type === 'private' && (
+                          <p className="text-xs text-muted-foreground">El evento no aparecerá en búsquedas públicas</p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="eventName">Nombre del evento *</Label>
+                        <Input
+                          id="eventName"
+                          value={editingEvent.name}
+                          onChange={(e) => setEditingEvent({...editingEvent, name: e.target.value})}
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="customUrl">URL personalizada</Label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 text-sm border border-r-0 border-border bg-secondary/50 rounded-l-md">
+                            accoro.com/
+                          </span>
+                          <Input
+                            id="customUrl"
+                            value={editingEvent.customUrl}
+                            onChange={(e) => setEditingEvent({...editingEvent, customUrl: e.target.value})}
+                            className="bg-secondary/50 border-border rounded-l-none"
+                          />
+                        </div>
+                        <div className="flex items-center text-xs text-yellow-500">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Al cambiar esta URL, los links previos quedarán obsoletos
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Categoría</Label>
+                        <Input
+                          id="category"
+                          value={editingEvent.category}
+                          onChange={(e) => setEditingEvent({...editingEvent, category: e.target.value})}
+                          placeholder="Música, Teatro, Conferencia..."
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="adultOnly"
+                            checked={editingEvent.adultOnly}
+                            onChange={(e) => setEditingEvent({...editingEvent, adultOnly: e.target.checked})}
+                            className="rounded border-border"
+                          />
+                          <Label htmlFor="adultOnly">Solo para mayores de edad</Label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="minAge">Edad mínima permitida</Label>
+                        <Input
+                          id="minAge"
+                          type="number"
+                          value={editingEvent.minAge}
+                          onChange={(e) => setEditingEvent({...editingEvent, minAge: e.target.value})}
+                          placeholder="18"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="showDateOnTicket"
+                            checked={editingEvent.showDateOnTicket}
+                            onChange={(e) => setEditingEvent({...editingEvent, showDateOnTicket: e.target.checked})}
+                            className="rounded border-border"
+                          />
+                          <Label htmlFor="showDateOnTicket">Mostrar fecha en los tickets</Label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="ticketOrder">Orden de tickets</Label>
+                        <select
+                          id="ticketOrder"
+                          value={editingEvent.ticketOrder}
+                          onChange={(e) => setEditingEvent({...editingEvent, ticketOrder: e.target.value})}
+                          className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm"
+                        >
+                          <option value="price_desc">Por precio (mayor a menor)</option>
+                          <option value="price_asc">Por precio (menor a mayor)</option>
+                          <option value="name">Por nombre</option>
+                          <option value="created">Por orden de creación</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="participants">Participantes/Artistas</Label>
+                      <Input
+                        id="participants"
+                        value={editingEvent.participants}
+                        onChange={(e) => setEditingEvent({...editingEvent, participants: e.target.value})}
+                        placeholder="Separar con punto y coma: Artista 1; Artista 2; Artista 3"
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Descripción del evento</Label>
+                      <Textarea
+                        id="description"
+                        value={editingEvent.description}
+                        onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})}
+                        rows={4}
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="itinerary">Itinerario detallado</Label>
+                      <Textarea
+                        id="itinerary"
+                        value={editingEvent.itinerary}
+                        onChange={(e) => setEditingEvent({...editingEvent, itinerary: e.target.value})}
+                        rows={4}
+                        placeholder="Describe el cronograma del evento..."
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="datetime" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="startDate">Fecha de inicio *</Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          value={editingEvent.startDate}
+                          onChange={(e) => setEditingEvent({...editingEvent, startDate: e.target.value})}
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="startTime">Hora de inicio *</Label>
+                        <Input
+                          id="startTime"
+                          type="time"
+                          value={editingEvent.startTime}
+                          onChange={(e) => setEditingEvent({...editingEvent, startTime: e.target.value})}
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="endDate">Fecha de finalización</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={editingEvent.endDate}
+                          onChange={(e) => setEditingEvent({...editingEvent, endDate: e.target.value})}
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="endTime">Hora de finalización</Label>
+                        <Input
+                          id="endTime"
+                          type="time"
+                          value={editingEvent.endTime}
+                          onChange={(e) => setEditingEvent({...editingEvent, endTime: e.target.value})}
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="location" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="province">Provincia</Label>
+                        <Input
+                          id="province"
+                          value={editingEvent.province}
+                          onChange={(e) => setEditingEvent({...editingEvent, province: e.target.value})}
+                          placeholder="Buenos Aires"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="city">Localidad</Label>
+                        <Input
+                          id="city"
+                          value={editingEvent.city}
+                          onChange={(e) => setEditingEvent({...editingEvent, city: e.target.value})}
+                          placeholder="Capital Federal"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="venue">Lugar/Venue</Label>
+                        <Input
+                          id="venue"
+                          value={editingEvent.venue}
+                          onChange={(e) => setEditingEvent({...editingEvent, venue: e.target.value})}
+                          placeholder="Luna Park"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="address">Dirección completa</Label>
+                        <Input
+                          id="address"
+                          value={editingEvent.address}
+                          onChange={(e) => setEditingEvent({...editingEvent, address: e.target.value})}
+                          placeholder="Av. Corrientes 1234"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="media" className="space-y-4 mt-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="promoVideo">Link de video promocional</Label>
+                        <Input
+                          id="promoVideo"
+                          type="url"
+                          value={editingEvent.promoVideoUrl}
+                          onChange={(e) => setEditingEvent({...editingEvent, promoVideoUrl: e.target.value})}
+                          placeholder="https://youtube.com/..."
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="spotify">URL de Spotify</Label>
+                        <Input
+                          id="spotify"
+                          type="url"
+                          value={editingEvent.spotifyUrl}
+                          onChange={(e) => setEditingEvent({...editingEvent, spotifyUrl: e.target.value})}
+                          placeholder="https://open.spotify.com/..."
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="mainImage">Imagen principal del evento</Label>
+                        <Input
+                          id="mainImage"
+                          type="url"
+                          value={editingEvent.mainImage}
+                          onChange={(e) => setEditingEvent({...editingEvent, mainImage: e.target.value})}
+                          placeholder="https://..."
+                          className="bg-secondary/50 border-border"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Dimensiones sugeridas: 800x800 px, máximo 1MB
+                        </p>
+                        <div className="flex items-center text-xs text-yellow-500">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Sin imagen, el evento no aparecerá en portada
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="topBanner">Banner superior</Label>
+                        <Input
+                          id="topBanner"
+                          type="url"
+                          value={editingEvent.topBanner}
+                          onChange={(e) => setEditingEvent({...editingEvent, topBanner: e.target.value})}
+                          placeholder="https://..."
+                          className="bg-secondary/50 border-border"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Dimensiones: 725x300 px, máximo 1MB
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="emailBanner">Banner para correos</Label>
+                        <Input
+                          id="emailBanner"
+                          type="url"
+                          value={editingEvent.emailBanner}
+                          onChange={(e) => setEditingEvent({...editingEvent, emailBanner: e.target.value})}
+                          placeholder="https://..."
+                          className="bg-secondary/50 border-border"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Dimensiones: 725x300 px, máximo 1MB
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+                  <Button variant="outline" onClick={() => setShowEditEvent(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveEditEvent} className="bg-primary hover:bg-primary/90">
+                    Guardar Cambios
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Tickets Dialog */}
             <Dialog open={showTickets} onOpenChange={setShowTickets}>
