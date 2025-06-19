@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar, MapPin, Ticket, QrCode } from 'lucide-react';
+import { Search, Calendar, MapPin, Ticket, QrCode, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BuyerDashboard = () => {
@@ -43,7 +43,7 @@ const BuyerDashboard = () => {
     }
   ];
 
-  // Mock data - mis tickets
+  // Mock data actualizado - mis tickets sin referencias a email
   const myTickets = [
     {
       id: 'TKT001',
@@ -53,7 +53,9 @@ const BuyerDashboard = () => {
       time: '21:00',
       location: 'Estadio Luna Park',
       qrCode: 'QR123456789',
-      status: 'Válido'
+      status: 'Válido',
+      purchaseDate: '2024-06-19',
+      isUsed: false
     }
   ];
 
@@ -67,14 +69,18 @@ const BuyerDashboard = () => {
     navigate(`/purchase/${eventId}/${ticketId}`);
   };
 
+  const handleGoBack = () => {
+    navigate('/welcome');
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
   };
 
-  const generateQR = (ticketId: string) => {
-    // En una implementación real, aquí generarías el QR real
-    toast.success('QR generado y enviado por email');
+  const viewQRCode = (ticketId: string) => {
+    // En una implementación real, aquí se mostraría el QR completo
+    toast.success('QR mostrado. Este código es único e intransferible.');
   };
 
   return (
@@ -84,8 +90,11 @@ const BuyerDashboard = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
+              <Button variant="ghost" onClick={handleGoBack} className="mr-4">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <h1 className="text-2xl font-bold text-gray-900">TicketPro</h1>
-              <Badge variant="secondary" className="ml-3">Comprador</Badge>
+              <Badge variant="secondary" className="ml-3">Mis Eventos</Badge>
             </div>
             <div className="flex items-center space-x-4">
               <Button
@@ -124,7 +133,6 @@ const BuyerDashboard = () => {
               </div>
             </div>
 
-            {/* Lista de eventos */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event) => (
                 <Card key={event.id} className="hover:shadow-lg transition-shadow">
@@ -176,7 +184,6 @@ const BuyerDashboard = () => {
           </>
         ) : (
           <>
-            {/* Mis Tickets */}
             <h2 className="text-2xl font-bold mb-6">Mis Tickets</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myTickets.map((ticket) => (
@@ -184,8 +191,8 @@ const BuyerDashboard = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span>{ticket.eventName}</span>
-                      <Badge variant={ticket.status === 'Válido' ? 'default' : 'destructive'}>
-                        {ticket.status}
+                      <Badge variant={ticket.status === 'Válido' && !ticket.isUsed ? 'default' : 'destructive'}>
+                        {ticket.isUsed ? 'Usado' : ticket.status}
                       </Badge>
                     </CardTitle>
                     <CardDescription>Ticket ID: {ticket.id}</CardDescription>
@@ -204,6 +211,9 @@ const BuyerDashboard = () => {
                         <MapPin className="h-4 w-4 mr-2" />
                         {ticket.location}
                       </div>
+                      <div className="text-xs text-gray-500">
+                        Comprado: {ticket.purchaseDate}
+                      </div>
                     </div>
                     
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -213,11 +223,15 @@ const BuyerDashboard = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => generateQR(ticket.id)}
+                        onClick={() => viewQRCode(ticket.id)}
                         className="mt-2"
+                        disabled={ticket.isUsed}
                       >
-                        Ver QR Completo
+                        {ticket.isUsed ? 'Ticket Usado' : 'Ver QR Completo'}
                       </Button>
+                      <p className="text-xs text-gray-500 mt-2">
+                        ⚠️ Este QR es único e intransferible. Solo disponible en la app.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

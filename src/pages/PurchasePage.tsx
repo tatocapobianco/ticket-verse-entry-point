@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ const PurchasePage = () => {
   const { eventId, ticketId } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
-  const [paymentStep, setPaymentStep] = useState('details'); // details, payment, success
+  const [paymentStep, setPaymentStep] = useState('details');
 
   // Mock data del evento y ticket
   const eventData = {
@@ -65,14 +64,21 @@ const PurchasePage = () => {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">¡Compra Exitosa!</h2>
             <p className="text-gray-600 mb-4">
-              Tu ticket ha sido generado y enviado por email.
+              Has recibido un email de confirmación con los detalles de tu compra.
             </p>
+            <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+              <div className="text-sm text-blue-800 font-medium mb-2">📱 Importante:</div>
+              <div className="text-sm text-blue-700">
+                Tus tickets con códigos QR están disponibles en la sección "Mis Tickets" de la aplicación. 
+                Los QR no se envían por email por seguridad.
+              </div>
+            </div>
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <div className="text-sm text-gray-600">Código de ticket:</div>
-              <div className="font-mono font-bold">TKT{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+              <div className="text-sm text-gray-600">Código de compra:</div>
+              <div className="font-mono font-bold">CMP{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
             </div>
             <Button onClick={handleGoBack} className="w-full">
-              Volver al Dashboard
+              Ver Mis Tickets
             </Button>
           </CardContent>
         </Card>
@@ -155,9 +161,16 @@ const PurchasePage = () => {
                   </div>
                 </div>
                 
-                <div className="bg-yellow-50 p-3 rounded-lg">
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>🔒 Seguridad:</strong> Recibirás un email de confirmación con los detalles de compra. 
+                    Los códigos QR estarán disponibles solo en la app, en la sección "Mis Tickets".
+                  </p>
+                </div>
+                
+                <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                   <p className="text-sm text-yellow-800">
-                    <strong>Importante:</strong> Los pagos se procesan de forma segura a través de MercadoPago. 
+                    <strong>💳 Pagos:</strong> Los pagos se procesan de forma segura a través de MercadoPago. 
                     El monto del ticket va al organizador y la comisión a la plataforma.
                   </p>
                 </div>
@@ -169,7 +182,7 @@ const PurchasePage = () => {
                 
                 <p className="text-xs text-gray-500 text-center">
                   Al continuar, aceptas nuestros términos y condiciones. 
-                  Recibirás un email de confirmación con tu ticket QR.
+                  Los QR solo están disponibles en la aplicación por seguridad.
                 </p>
               </div>
             </CardContent>

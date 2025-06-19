@@ -6,13 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [userType, setUserType] = useState('A');
   const [formData, setFormData] = useState({
     email: '',
     dni: '',
@@ -22,36 +20,35 @@ const Index = () => {
   });
 
   const handleAuth = () => {
-    console.log('Autenticando usuario:', { ...formData, userType, isLogin });
+    console.log('Autenticando usuario:', { ...formData, isLogin });
+    
+    // Validación básica
+    if (isLogin) {
+      if (!formData.email && !formData.dni) {
+        toast.error('Ingresa tu email o DNI');
+        return;
+      }
+      if (!formData.password) {
+        toast.error('Ingresa tu contraseña');
+        return;
+      }
+    } else {
+      if (!formData.name || !formData.email || !formData.dni || !formData.password) {
+        toast.error('Completa todos los campos obligatorios');
+        return;
+      }
+    }
     
     // Simulamos autenticación exitosa
-    localStorage.setItem('userType', userType);
     localStorage.setItem('userId', '1');
-    localStorage.setItem('userName', formData.name || formData.email);
+    localStorage.setItem('userName', formData.name || formData.email || formData.dni);
+    localStorage.setItem('userEmail', formData.email);
+    localStorage.setItem('userDni', formData.dni);
     
     toast.success(isLogin ? '¡Sesión iniciada!' : '¡Registro exitoso!');
     
-    // Redirigir según tipo de usuario
-    switch(userType) {
-      case 'A':
-        navigate('/buyer-dashboard');
-        break;
-      case 'B':
-        navigate('/scanner-dashboard');
-        break;
-      case 'C':
-        navigate('/organizer-dashboard');
-        break;
-    }
-  };
-
-  const getUserTypeLabel = (type: string) => {
-    switch(type) {
-      case 'A': return 'Comprador de Entradas';
-      case 'B': return 'Escaneador de Entradas';
-      case 'C': return 'Organizador de Eventos';
-      default: return '';
-    }
+    // Redirigir a la página de bienvenida
+    navigate('/welcome');
   };
 
   return (
@@ -68,7 +65,10 @@ const Index = () => {
               {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
             </CardTitle>
             <CardDescription className="text-center">
-              Accede a tu cuenta según tu tipo de usuario
+              {isLogin 
+                ? 'Ingresa con tu email o DNI' 
+                : 'Crea tu cuenta para acceder a todos los modos'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -84,27 +84,21 @@ const Index = () => {
               
               <TabsContent value="login" className="space-y-4 mt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="userType">Tipo de Usuario</Label>
-                  <Select value={userType} onValueChange={setUserType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A">Usuario A - {getUserTypeLabel('A')}</SelectItem>
-                      <SelectItem value="B">Usuario B - {getUserTypeLabel('B')}</SelectItem>
-                      <SelectItem value="C">Usuario C - {getUserTypeLabel('C')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email o DNI</Label>
+                  <Label htmlFor="emailOrDni">Email o DNI</Label>
                   <Input
-                    id="email"
+                    id="emailOrDni"
                     type="text"
                     placeholder="usuario@email.com o 12345678"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    value={formData.email || formData.dni}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Si contiene @ es email, sino es DNI
+                      if (value.includes('@')) {
+                        setFormData({...formData, email: value, dni: ''});
+                      } else {
+                        setFormData({...formData, dni: value, email: ''});
+                      }
+                    }}
                   />
                 </div>
                 
@@ -126,21 +120,7 @@ const Index = () => {
               
               <TabsContent value="register" className="space-y-4 mt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="userType">Tipo de Usuario</Label>
-                  <Select value={userType} onValueChange={setUserType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A">Usuario A - {getUserTypeLabel('A')}</SelectItem>
-                      <SelectItem value="B">Usuario B - {getUserTypeLabel('B')}</SelectItem>
-                      <SelectItem value="C">Usuario C - {getUserTypeLabel('C')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre Completo</Label>
+                  <Label htmlFor="name">Nombre Completo *</Label>
                   <Input
                     id="name"
                     type="text"
@@ -151,7 +131,7 @@ const Index = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -162,7 +142,7 @@ const Index = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="dni">DNI</Label>
+                  <Label htmlFor="dni">DNI *</Label>
                   <Input
                     id="dni"
                     type="text"
@@ -172,21 +152,20 @@ const Index = () => {
                   />
                 </div>
                 
-                {userType === 'C' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="organizationName">Nombre de Organización</Label>
-                    <Input
-                      id="organizationName"
-                      type="text"
-                      placeholder="Mi Empresa de Eventos"
-                      value={formData.organizationName}
-                      onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="organizationName">Nombre de Organización (opcional)</Label>
+                  <Input
+                    id="organizationName"
+                    type="text"
+                    placeholder="Mi Empresa de Eventos"
+                    value={formData.organizationName}
+                    onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
+                  />
+                  <p className="text-xs text-gray-500">Solo si planeas organizar eventos</p>
+                </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
+                  <Label htmlFor="password">Contraseña *</Label>
                   <Input
                     id="password"
                     type="password"
