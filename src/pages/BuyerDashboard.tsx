@@ -162,17 +162,22 @@ const BuyerDashboard = () => {
                         <div key={ticket.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                           <div>
                             <div className="font-medium">{ticket.type}</div>
-                            <div className="text-sm text-gray-600">{ticket.available} disponibles</div>
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold">${ticket.price.toLocaleString()}</div>
-                            <Button
-                              size="sm"
-                              onClick={() => handleBuyTicket(event.id, ticket.id)}
-                              className="mt-1"
-                            >
-                              Comprar
-                            </Button>
+                            {ticket.available > 0 ? (
+                              <Button
+                                size="sm"
+                                onClick={() => handleBuyTicket(event.id, ticket.id)}
+                                className="mt-1"
+                              >
+                                Comprar
+                              </Button>
+                            ) : (
+                              <div className="text-sm text-gray-500 mt-1">
+                                Agotado
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
