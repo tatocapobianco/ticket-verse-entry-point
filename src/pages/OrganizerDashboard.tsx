@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle, Copy } from 'lucide-react';
+import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle, Copy, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const OrganizerDashboard = () => {
@@ -21,7 +21,9 @@ const OrganizerDashboard = () => {
   const [showTickets, setShowTickets] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showEditEvent, setShowEditEvent] = useState(false);
+  const [showEditTicket, setShowEditTicket] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
   
   const [newEvent, setNewEvent] = useState({
     name: '',
@@ -81,6 +83,48 @@ const OrganizerDashboard = () => {
     dni: '',
     linkQuantity: ''
   });
+
+  // Add state for editing tickets
+  const [editingTicket, setEditingTicket] = useState({
+    name: '',
+    price: '',
+    quantity: '',
+    validFrom: '',
+    validTo: '',
+    status: 'active',
+    requiresAuth: false,
+    authCode: '',
+    isCourtesy: false
+  });
+
+  // Add state for courtesy history
+  const [courtesyHistory, setCourtesyHistory] = useState([
+    {
+      id: 1,
+      type: 'email',
+      recipient: 'juan@email.com',
+      ticketType: 'VIP',
+      sentDate: '2024-06-15',
+      status: 'claimed'
+    },
+    {
+      id: 2,
+      type: 'dni',
+      recipient: '12345678',
+      ticketType: 'General',
+      sentDate: '2024-06-14',
+      status: 'pending'
+    },
+    {
+      id: 3,
+      type: 'multiple_link',
+      recipient: 'Link múltiple (3 entradas)',
+      ticketType: 'General',
+      sentDate: '2024-06-13',
+      status: 'active',
+      linkCode: 'ABC123XYZ'
+    }
+  ]);
 
   // Mock data - eventos del organizador
   const [myEvents, setMyEvents] = useState([
@@ -210,6 +254,88 @@ const OrganizerDashboard = () => {
     });
   };
 
+  const handleEditTicket = (ticket) => {
+    setSelectedTicket(ticket);
+    setEditingTicket({
+      name: ticket.type,
+      price: ticket.price.toString(),
+      quantity: ticket.total.toString(),
+      validFrom: ticket.validFrom || '',
+      validTo: ticket.validTo || '',
+      status: ticket.status,
+      requiresAuth: ticket.requiresAuth,
+      authCode: ticket.authCode || '',
+      isCourtesy: ticket.isCourtesy
+    });
+    setShowEditTicket(true);
+  };
+
+  const handleSaveEditTicket = () => {
+    if (!editingTicket.name || (!editingTicket.isCourtesy && !editingTicket.price) || (!editingTicket.isCourtesy && !editingTicket.quantity)) {
+      toast.error('Por favor, completa todos los campos obligatorios');
+      return;
+    }
+
+    // Update the ticket in the selected event
+    setMyEvents(prev => prev.map(event => 
+      event.id === selectedEvent.id 
+        ? { 
+            ...event, 
+            tickets: event.tickets.map(ticket => 
+              ticket.id === selectedTicket.id
+                ? {
+                    ...ticket,
+                    type: editingTicket.name,
+                    price: editingTicket.isCourtesy ? 0 : parseInt(editingTicket.price),
+                    total: parseInt(editingTicket.quantity || '0'),
+                    status: editingTicket.isCourtesy ? 'hidden' : editingTicket.status,
+                    requiresAuth: editingTicket.requiresAuth,
+                    authCode: editingTicket.authCode,
+                    validFrom: editingTicket.validFrom,
+                    validTo: editingTicket.validTo,
+                    isCourtesy: editingTicket.isCourtesy
+                  }
+                : ticket
+            )
+          }
+        : event
+    ));
+
+    toast.success('Ticket actualizado exitosamente');
+    setShowEditTicket(false);
+  };
+
+  const handleDeleteTicket = (ticketId) => {
+    setMyEvents(prev => prev.map(event => 
+      event.id === selectedEvent.id 
+        ? { 
+            ...event, 
+            tickets: event.tickets.filter(ticket => ticket.id !== ticketId)
+          }
+        : event
+    ));
+    toast.success('Ticket eliminado exitosamente');
+  };
+
+  const handleDuplicateTicket = (ticket) => {
+    const duplicatedTicket = {
+      ...ticket,
+      id: Date.now(),
+      type: `${ticket.type} (Copia)`,
+      sold: 0
+    };
+
+    setMyEvents(prev => prev.map(event => 
+      event.id === selectedEvent.id 
+        ? { 
+            ...event, 
+            tickets: [...event.tickets, duplicatedTicket]
+          }
+        : event
+    ));
+    toast.success('Ticket duplicado exitosamente');
+  };
+
   const handleSendCourtesy = () => {
     if (!courtesyData.eventId || !courtesyData.ticketType) {
       toast.error('Selecciona evento y tipo de ticket');
@@ -231,10 +357,23 @@ const OrganizerDashboard = () => {
       return;
     }
 
+    // Add to courtesy history
+    const newCourtesy = {
+      id: Date.now(),
+      type: courtesyData.sendType,
+      recipient: courtesyData.sendType === 'email' ? courtesyData.email : 
+                 courtesyData.sendType === 'dni' ? courtesyData.dni : 
+                 `Link múltiple (${courtesyData.linkQuantity} entradas)`,
+      ticketType: courtesyData.ticketType,
+      sentDate: new Date().toISOString().split('T')[0],
+      status: courtesyData.sendType === 'multiple_link' ? 'active' : 'pending',
+      linkCode: courtesyData.sendType === 'multiple_link' ? Math.random().toString(36).substr(2, 10) : undefined
+    };
+
+    setCourtesyHistory(prev => [newCourtesy, ...prev]);
+
     if (courtesyData.sendType === 'multiple_link') {
-      const linkCode = Math.random().toString(36).substr(2, 10);
-      const courtesyLink = `${window.location.origin}/cortesia/${linkCode}`;
-      
+      const courtesyLink = `${window.location.origin}/cortesia/${newCourtesy.linkCode}`;
       navigator.clipboard.writeText(courtesyLink);
       toast.success(`Link copiado al portapapeles. ${courtesyData.linkQuantity} entradas disponibles.`);
     } else {
@@ -923,6 +1062,144 @@ const OrganizerDashboard = () => {
               </DialogContent>
             </Dialog>
 
+            {/* Courtesy Dialog */}
+            <Dialog open={showCourtesy} onOpenChange={setShowCourtesy}>
+              <DialogContent className="max-w-2xl bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle>Gestión de Cortesías - {selectedEvent?.name}</DialogTitle>
+                  <DialogDescription>
+                    Envía invitaciones gratuitas para este evento
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <Tabs defaultValue="send" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 bg-secondary/50">
+                    <TabsTrigger value="send">Enviar Cortesía</TabsTrigger>
+                    <TabsTrigger value="history">Historial</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="send" className="space-y-4 mt-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="courtesyTicketType">Tipo de Ticket</Label>
+                        <select
+                          id="courtesyTicketType"
+                          value={courtesyData.ticketType}
+                          onChange={(e) => setCourtesyData({...courtesyData, ticketType: e.target.value})}
+                          className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm"
+                        >
+                          <option value="">Seleccionar...</option>
+                          {selectedEvent?.tickets.filter(t => t.isCourtesy).map(ticket => (
+                            <option key={ticket.id} value={ticket.type}>{ticket.type}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="sendType">Método de Envío</Label>
+                        <select
+                          id="sendType"
+                          value={courtesyData.sendType}
+                          onChange={(e) => setCourtesyData({...courtesyData, sendType: e.target.value})}
+                          className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm"
+                        >
+                          <option value="email">Por Email</option>
+                          <option value="dni">Por DNI</option>
+                          <option value="multiple_link">Link Múltiple</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {courtesyData.sendType === 'email' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="courtesyEmail">Email del Invitado</Label>
+                        <Input
+                          id="courtesyEmail"
+                          type="email"
+                          value={courtesyData.email}
+                          onChange={(e) => setCourtesyData({...courtesyData, email: e.target.value})}
+                          placeholder="invitado@email.com"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                    )}
+
+                    {courtesyData.sendType === 'dni' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="courtesyDni">DNI del Invitado</Label>
+                        <Input
+                          id="courtesyDni"
+                          value={courtesyData.dni}
+                          onChange={(e) => setCourtesyData({...courtesyData, dni: e.target.value})}
+                          placeholder="12345678"
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                    )}
+
+                    {courtesyData.sendType === 'multiple_link' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="linkQuantity">Cantidad de Entradas</Label>
+                        <Input
+                          id="linkQuantity"
+                          type="number"
+                          value={courtesyData.linkQuantity}
+                          onChange={(e) => setCourtesyData({...courtesyData, linkQuantity: e.target.value})}
+                          placeholder="4"
+                          min="1"
+                          max="20"
+                          className="bg-secondary/50 border-border"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Se generará un link único que podrá usarse esta cantidad de veces
+                        </p>
+                      </div>
+                    )}
+
+                    <Button onClick={handleSendCourtesy} className="w-full bg-primary hover:bg-primary/90">
+                      {courtesyData.sendType === 'multiple_link' ? 'Generar Link' : 'Enviar Cortesía'}
+                    </Button>
+                  </TabsContent>
+
+                  <TabsContent value="history" className="mt-6">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Cortesías enviadas</h4>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-border">
+                            <TableHead>Tipo</TableHead>
+                            <TableHead>Destinatario</TableHead>
+                            <TableHead>Ticket</TableHead>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Estado</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {courtesyHistory.filter(c => c.type !== 'multiple_link' || c.linkCode).map((courtesy) => (
+                            <TableRow key={courtesy.id} className="border-border">
+                              <TableCell>
+                                {courtesy.type === 'email' && <Mail className="h-4 w-4" />}
+                                {courtesy.type === 'dni' && <Key className="h-4 w-4" />}
+                                {courtesy.type === 'multiple_link' && <Link className="h-4 w-4" />}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{courtesy.recipient}</TableCell>
+                              <TableCell>{courtesy.ticketType}</TableCell>
+                              <TableCell>{courtesy.sentDate}</TableCell>
+                              <TableCell>
+                                <Badge variant={courtesy.status === 'claimed' ? 'default' : 'secondary'}>
+                                  {courtesy.status === 'claimed' ? 'Canjeado' : 
+                                   courtesy.status === 'active' ? 'Activo' : 'Pendiente'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+
             {/* Tickets Dialog */}
             <Dialog open={showTickets} onOpenChange={setShowTickets}>
               <DialogContent className="max-w-4xl bg-card border-border">
@@ -1097,14 +1374,163 @@ const OrganizerDashboard = () => {
                             ) : '-'}
                           </TableCell>
                           <TableCell>
-                            <Button size="sm" variant="outline" className="border-border">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <div className="flex space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => handleEditTicket(ticket)}
+                                className="border-border"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => handleDuplicateTicket(ticket)}
+                                className="border-border"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => handleDeleteTicket(ticket.id)}
+                                className="border-border hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Edit Ticket Dialog */}
+            <Dialog open={showEditTicket} onOpenChange={setShowEditTicket}>
+              <DialogContent className="bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle>Editar Ticket</DialogTitle>
+                  <DialogDescription>
+                    Modifica la información del ticket: {selectedTicket?.type}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="editIsCourtesy"
+                        checked={editingTicket.isCourtesy}
+                        onChange={(e) => setEditingTicket({...editingTicket, isCourtesy: e.target.checked})}
+                        className="rounded border-border"
+                      />
+                      <Label htmlFor="editIsCourtesy">Ticket de cortesía</Label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="editTicketName">Nombre del Ticket *</Label>
+                      <Input
+                        id="editTicketName"
+                        value={editingTicket.name}
+                        onChange={(e) => setEditingTicket({...editingTicket, name: e.target.value})}
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+                    {!editingTicket.isCourtesy && (
+                      <div className="space-y-2">
+                        <Label htmlFor="editTicketPrice">Precio *</Label>
+                        <Input
+                          id="editTicketPrice"
+                          type="number"
+                          value={editingTicket.price}
+                          onChange={(e) => setEditingTicket({...editingTicket, price: e.target.value})}
+                          className="bg-secondary/50 border-border"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="editTicketQuantity">Cantidad Disponible</Label>
+                      <Input
+                        id="editTicketQuantity"
+                        type="number"
+                        value={editingTicket.quantity}
+                        onChange={(e) => setEditingTicket({...editingTicket, quantity: e.target.value})}
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+                    {!editingTicket.isCourtesy && (
+                      <div className="space-y-2">
+                        <Label htmlFor="editTicketStatus">Estado</Label>
+                        <select
+                          id="editTicketStatus"
+                          value={editingTicket.status}
+                          onChange={(e) => setEditingTicket({...editingTicket, status: e.target.value})}
+                          className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm"
+                        >
+                          <option value="active">Activo</option>
+                          <option value="inactive">Inactivo</option>
+                          <option value="sold_out">Agotado</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="editValidFrom">Válido desde</Label>
+                      <Input
+                        id="editValidFrom"
+                        type="datetime-local"
+                        value={editingTicket.validFrom}
+                        onChange={(e) => setEditingTicket({...editingTicket, validFrom: e.target.value})}
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="editValidTo">Válido hasta</Label>
+                      <Input
+                        id="editValidTo"
+                        type="datetime-local"
+                        value={editingTicket.validTo}
+                        onChange={(e) => setEditingTicket({...editingTicket, validTo: e.target.value})}
+                        className="bg-secondary/50 border-border"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="editRequiresAuth"
+                        checked={editingTicket.requiresAuth}
+                        onChange={(e) => setEditingTicket({...editingTicket, requiresAuth: e.target.checked})}
+                        className="rounded border-border"
+                      />
+                      <Label htmlFor="editRequiresAuth">Requiere código de autorización</Label>
+                    </div>
+                    {editingTicket.requiresAuth && (
+                      <Input
+                        placeholder="Código de autorización"
+                        value={editingTicket.authCode}
+                        onChange={(e) => setEditingTicket({...editingTicket, authCode: e.target.value})}
+                        className="bg-secondary/50 border-border"
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowEditTicket(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveEditTicket} className="bg-primary hover:bg-primary/90">
+                    Guardar Cambios
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>

@@ -220,9 +220,9 @@ const PurchasePage = () => {
                     Comprar
                   </Button>
                 ) : (
-                  <Button disabled className="w-full" size="lg" variant="secondary">
+                  <div className="w-full text-center py-3 text-gray-500 font-medium">
                     Agotado
-                  </Button>
+                  </div>
                 )}
                 
                 <p className="text-xs text-gray-500 text-center">
