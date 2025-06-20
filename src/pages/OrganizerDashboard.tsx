@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const OrganizerDashboard = () => {
@@ -76,9 +76,10 @@ const OrganizerDashboard = () => {
   const [courtesyData, setCourtesyData] = useState({
     eventId: '',
     ticketType: '',
-    recipientType: 'email',
+    sendType: 'email', // 'email', 'dni', 'multiple_link'
     email: '',
-    dni: ''
+    dni: '',
+    linkQuantity: ''
   });
 
   // Mock data - eventos del organizador
@@ -215,24 +216,39 @@ const OrganizerDashboard = () => {
       return;
     }
 
-    if (courtesyData.recipientType === 'email' && !courtesyData.email) {
+    if (courtesyData.sendType === 'email' && !courtesyData.email) {
       toast.error('Ingresa el email del invitado');
       return;
     }
 
-    if (courtesyData.recipientType === 'dni' && !courtesyData.dni) {
+    if (courtesyData.sendType === 'dni' && !courtesyData.dni) {
       toast.error('Ingresa el DNI del invitado');
       return;
     }
 
-    toast.success('Cortesía enviada exitosamente');
+    if (courtesyData.sendType === 'multiple_link' && !courtesyData.linkQuantity) {
+      toast.error('Ingresa la cantidad de entradas para el link');
+      return;
+    }
+
+    if (courtesyData.sendType === 'multiple_link') {
+      const linkCode = Math.random().toString(36).substr(2, 10);
+      const courtesyLink = `${window.location.origin}/cortesia/${linkCode}`;
+      
+      navigator.clipboard.writeText(courtesyLink);
+      toast.success(`Link copiado al portapapeles. ${courtesyData.linkQuantity} entradas disponibles.`);
+    } else {
+      toast.success('Cortesía enviada exitosamente');
+    }
+    
     setShowCourtesy(false);
     setCourtesyData({
       eventId: '',
       ticketType: '',
-      recipientType: 'email',
+      sendType: 'email',
       email: '',
-      dni: ''
+      dni: '',
+      linkQuantity: ''
     });
   };
 
@@ -538,7 +554,7 @@ const OrganizerDashboard = () => {
                           onClick={() => copyEventLink(event.id)}
                           className="border-border hover:bg-secondary"
                         >
-                          <Link className="h-4 w-4 mr-1" />
+                          <Copy className="h-4 w-4 mr-1" />
                           Link
                         </Button>
                         <Button 
@@ -1089,93 +1105,6 @@ const OrganizerDashboard = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Courtesy Dialog */}
-            <Dialog open={showCourtesy} onOpenChange={setShowCourtesy}>
-              <DialogContent className="bg-card border-border">
-                <DialogHeader>
-                  <DialogTitle>Enviar Ticket de Cortesía</DialogTitle>
-                  <DialogDescription>
-                    Para el evento: {selectedEvent?.name}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="courtesyTicket">Tipo de Ticket</Label>
-                    <select
-                      id="courtesyTicket"
-                      value={courtesyData.ticketType}
-                      onChange={(e) => setCourtesyData({...courtesyData, ticketType: e.target.value})}
-                      className="w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm"
-                    >
-                      <option value="">Seleccionar tipo</option>
-                      {selectedEvent?.tickets.filter(ticket => ticket.isCourtesy).map((ticket) => (
-                        <option key={ticket.id} value={ticket.type}>
-                          {ticket.type}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Tipo de identificación</Label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          value="email"
-                          checked={courtesyData.recipientType === 'email'}
-                          onChange={(e) => setCourtesyData({...courtesyData, recipientType: e.target.value})}
-                          className="text-primary"
-                        />
-                        <span>Email</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          value="dni"
-                          checked={courtesyData.recipientType === 'dni'}
-                          onChange={(e) => setCourtesyData({...courtesyData, recipientType: e.target.value})}
-                          className="text-primary"
-                        />
-                        <span>DNI</span>
-                      </label>
-                    </div>
-                  </div>
-                  {courtesyData.recipientType === 'email' ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="courtesyEmail">Email del invitado</Label>
-                      <Input
-                        id="courtesyEmail"
-                        type="email"
-                        value={courtesyData.email}
-                        onChange={(e) => setCourtesyData({...courtesyData, email: e.target.value})}
-                        placeholder="invitado@email.com"
-                        className="bg-secondary/50 border-border"
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="courtesyDni">DNI del invitado</Label>
-                      <Input
-                        id="courtesyDni"
-                        value={courtesyData.dni}
-                        onChange={(e) => setCourtesyData({...courtesyData, dni: e.target.value})}
-                        placeholder="12345678"
-                        className="bg-secondary/50 border-border"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowCourtesy(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSendCourtesy} className="bg-primary hover:bg-primary/90">
-                    Enviar Cortesía
-                  </Button>
                 </div>
               </DialogContent>
             </Dialog>

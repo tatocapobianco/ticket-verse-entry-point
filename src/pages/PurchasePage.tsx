@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,17 +30,17 @@ const PurchasePage = () => {
     }
   };
 
-  const serviceCommission = 0.05; // 5% de comisión
+  const serviceCommission = 0.15; // 15% de comisión (oculta al usuario)
   const ticketTotal = eventData.ticket.price * quantity;
   const commission = Math.round(ticketTotal * serviceCommission);
-  const totalAmount = ticketTotal + commission;
+  const totalAmount = ticketTotal; // Solo mostramos el precio del ticket al usuario
 
   const handlePurchase = () => {
     console.log('Procesando compra:', {
       eventId,
       ticketId,
       quantity,
-      totalAmount,
+      totalAmount: ticketTotal + commission, // El total real incluye comisión en backend
       commission
     });
 
@@ -63,14 +64,12 @@ const PurchasePage = () => {
           <CardContent className="text-center pt-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">¡Compra Exitosa!</h2>
-            <p className="text-gray-600 mb-4">
-              Has recibido un email de confirmación con los detalles de tu compra.
-            </p>
             <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
-              <div className="text-sm text-blue-800 font-medium mb-2">📱 Importante:</div>
+              <div className="text-sm text-blue-800 font-medium mb-2">🔒 ¡Compra exitosa!</div>
               <div className="text-sm text-blue-700">
-                Tus tickets con códigos QR están disponibles en la sección "Mis Tickets" de la aplicación. 
-                Los QR no se envían por email por seguridad.
+                Recibiste un email de confirmación con los detalles.<br/>
+                Tu ticket con código QR está disponible solo dentro de la app, en la sección "Mis Tickets". 
+                Recordá que el QR es único e intransferible.
               </div>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -150,29 +149,11 @@ const PurchasePage = () => {
                     <span>Tickets ({quantity}x)</span>
                     <span>${ticketTotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>Comisión de servicio ({(serviceCommission * 100)}%)</span>
-                    <span>${commission.toLocaleString()}</span>
-                  </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span>${totalAmount.toLocaleString()}</span>
                   </div>
-                </div>
-                
-                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    <strong>🔒 Seguridad:</strong> Recibirás un email de confirmación con los detalles de compra. 
-                    Los códigos QR estarán disponibles solo en la app, en la sección "Mis Tickets".
-                  </p>
-                </div>
-                
-                <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                  <p className="text-sm text-yellow-800">
-                    <strong>💳 Pagos:</strong> Los pagos se procesan de forma segura a través de MercadoPago. 
-                    El monto del ticket va al organizador y la comisión a la plataforma.
-                  </p>
                 </div>
                 
                 <Button onClick={handlePurchase} className="w-full" size="lg">
@@ -181,8 +162,7 @@ const PurchasePage = () => {
                 </Button>
                 
                 <p className="text-xs text-gray-500 text-center">
-                  Al continuar, aceptas nuestros términos y condiciones. 
-                  Los QR solo están disponibles en la aplicación por seguridad.
+                  Al continuar, aceptas nuestros términos y condiciones.
                 </p>
               </div>
             </CardContent>
