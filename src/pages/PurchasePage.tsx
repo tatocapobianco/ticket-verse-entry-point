@@ -13,7 +13,7 @@ const PurchasePage = () => {
   const { eventId, ticketId } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
-  const [paymentStep, setPaymentStep] = useState('details');
+  const [paymentStep, setPaymentStep] = useState('details'); // 'details', 'summary', 'success'
 
   // Mock data del evento y ticket
   const eventData = {
@@ -26,22 +26,28 @@ const PurchasePage = () => {
       id: 1,
       type: 'General',
       price: 15000,
-      available: 500
+      available: 500,
+      status: 'available' // 'available' o 'sold_out'
     }
   };
 
-  const serviceCommission = 0.15; // 15% de comisión (oculta al usuario)
+  const serviceCommission = 0.15; // 15% de comisión
   const ticketTotal = eventData.ticket.price * quantity;
   const commission = Math.round(ticketTotal * serviceCommission);
-  const totalAmount = ticketTotal; // Solo mostramos el precio del ticket al usuario
+  const totalAmount = ticketTotal + commission;
 
-  const handlePurchase = () => {
+  const handleBuyClick = () => {
+    setPaymentStep('summary');
+  };
+
+  const handleFinalPurchase = () => {
     console.log('Procesando compra:', {
       eventId,
       ticketId,
       quantity,
-      totalAmount: ticketTotal + commission, // El total real incluye comisión en backend
-      commission
+      ticketTotal,
+      commission,
+      totalAmount
     });
 
     // Simulamos el proceso de pago con MercadoPago
@@ -54,7 +60,11 @@ const PurchasePage = () => {
   };
 
   const handleGoBack = () => {
-    navigate('/buyer-dashboard');
+    if (paymentStep === 'summary') {
+      setPaymentStep('details');
+    } else {
+      navigate('/buyer-dashboard');
+    }
   };
 
   if (paymentStep === 'success') {
@@ -76,11 +86,66 @@ const PurchasePage = () => {
               <div className="text-sm text-gray-600">Código de compra:</div>
               <div className="font-mono font-bold">CMP{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
             </div>
-            <Button onClick={handleGoBack} className="w-full">
+            <Button onClick={() => navigate('/buyer-dashboard')} className="w-full">
               Ver Mis Tickets
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (paymentStep === 'summary') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Button variant="ghost" onClick={handleGoBack} className="mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumen de Compra</CardTitle>
+              <CardDescription>Revisa los detalles antes de finalizar tu compra</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">{eventData.name}</h3>
+                  <p className="text-gray-600">{eventData.date} - {eventData.time}</p>
+                  <p className="text-gray-600">{eventData.location}</p>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Ticket: {eventData.ticket.type} ({quantity}x)</span>
+                    <span className="font-medium">${ticketTotal.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span>Cargo por servicio</span>
+                    <span className="font-medium">${commission.toLocaleString()}</span>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-between items-center text-lg font-bold">
+                    <span>Total a pagar</span>
+                    <span>${totalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                <Button onClick={handleFinalPurchase} className="w-full" size="lg">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Finalizar compra
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -112,11 +177,10 @@ const PurchasePage = () => {
                 <div>
                   <h4 className="font-medium mb-2">Tipo de Ticket</h4>
                   <div className="bg-blue-50 p-3 rounded-lg">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="font-medium">{eventData.ticket.type}</span>
                       <span className="font-bold">${eventData.ticket.price.toLocaleString()}</span>
                     </div>
-                    <p className="text-sm text-gray-600">{eventData.ticket.available} disponibles</p>
                   </div>
                 </div>
                 
@@ -139,8 +203,8 @@ const PurchasePage = () => {
           {/* Resumen de Compra */}
           <Card>
             <CardHeader>
-              <CardTitle>Resumen de Compra</CardTitle>
-              <CardDescription>Revisa los detalles antes de continuar</CardDescription>
+              <CardTitle>Información de Compra</CardTitle>
+              <CardDescription>Selecciona la cantidad y continúa</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -149,17 +213,17 @@ const PurchasePage = () => {
                     <span>Tickets ({quantity}x)</span>
                     <span>${ticketTotal.toLocaleString()}</span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>${totalAmount.toLocaleString()}</span>
-                  </div>
                 </div>
                 
-                <Button onClick={handlePurchase} className="w-full" size="lg">
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Pagar con MercadoPago
-                </Button>
+                {eventData.ticket.status === 'available' ? (
+                  <Button onClick={handleBuyClick} className="w-full" size="lg">
+                    Comprar
+                  </Button>
+                ) : (
+                  <Button disabled className="w-full" size="lg" variant="secondary">
+                    Agotado
+                  </Button>
+                )}
                 
                 <p className="text-xs text-gray-500 text-center">
                   Al continuar, aceptas nuestros términos y condiciones.
