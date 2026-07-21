@@ -12,6 +12,7 @@ import ScannerDashboard from "./pages/ScannerDashboard";
 import PurchasePage from "./pages/PurchasePage";
 import CourtesyClaimPage from "./pages/CourtesyClaimPage";
 import NotFound from "./pages/NotFound";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/scanner-dashboard" element={<ScannerDashboard />} />
           <Route path="/purchase/:eventId/:ticketId" element={<PurchasePage />} />
           <Route path="/cortesia/:courtesyCode" element={<CourtesyClaimPage />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
