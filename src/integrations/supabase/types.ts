@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          access_key: string
+          created_at: string
+          description: string | null
+          event_date: string | null
+          event_number: string
+          event_time: string | null
+          id: string
+          image_url: string | null
+          is_public: boolean
+          location: string | null
+          name: string
+          organizer_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_key: string
+          created_at?: string
+          description?: string | null
+          event_date?: string | null
+          event_number: string
+          event_time?: string | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          location?: string | null
+          name: string
+          organizer_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_key?: string
+          created_at?: string
+          description?: string | null
+          event_date?: string | null
+          event_number?: string
+          event_time?: string | null
+          id?: string
+          image_url?: string | null
+          is_public?: boolean
+          location?: string | null
+          name?: string
+          organizer_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          dni: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          organization_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dni?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          organization_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dni?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          organization_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
