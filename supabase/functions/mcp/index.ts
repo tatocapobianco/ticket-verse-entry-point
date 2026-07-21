@@ -6,15 +6,19 @@
 import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.24.0";
 
 // src/lib/mcp/tools/list-my-events.ts
-import { createClient } from "npm:@supabase/supabase-js@^2.110.8";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z } from "npm:zod@^3.23.8";
+
+// src/lib/mcp/_supabase.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.110.8";
 function supabaseForUser(ctx) {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
     global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
     auth: { persistSession: false, autoRefreshToken: false }
   });
 }
+
+// src/lib/mcp/tools/list-my-events.ts
 var list_my_events_default = defineTool({
   name: "list_my_events",
   title: "List my events",
@@ -39,15 +43,8 @@ var list_my_events_default = defineTool({
 });
 
 // src/lib/mcp/tools/list-public-events.ts
-import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.110.8";
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z2 } from "npm:zod@^3.23.8";
-function supabaseForUser2(ctx) {
-  return createClient2(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var list_public_events_default = defineTool2({
   name: "list_public_events",
   title: "List public events",
@@ -61,7 +58,7 @@ var list_public_events_default = defineTool2({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
-    let query = supabaseForUser2(ctx).from("events").select("id, name, description, event_date, event_time, location, event_number").eq("is_public", true).eq("status", "active").order("event_date", { ascending: true, nullsFirst: false }).limit(limit ?? 20);
+    let query = supabaseForUser(ctx).from("events").select("id, name, description, event_date, event_time, location, event_number").eq("is_public", true).eq("status", "active").order("event_date", { ascending: true, nullsFirst: false }).limit(limit ?? 20);
     if (search && search.trim()) {
       query = query.ilike("name", `%${search.trim()}%`);
     }
@@ -77,15 +74,8 @@ var list_public_events_default = defineTool2({
 });
 
 // src/lib/mcp/tools/create-event.ts
-import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.110.8";
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z3 } from "npm:zod@^3.23.8";
-function supabaseForUser3(ctx) {
-  return createClient3(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 function randomEventNumber() {
   return "EVT" + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
@@ -121,7 +111,7 @@ var create_event_default = defineTool3({
       is_public: input.is_public ?? true,
       status: "active"
     };
-    const { data, error } = await supabaseForUser3(ctx).from("events").insert(payload).select().single();
+    const { data, error } = await supabaseForUser(ctx).from("events").insert(payload).select().single();
     if (error) {
       return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
     }
@@ -133,14 +123,7 @@ var create_event_default = defineTool3({
 });
 
 // src/lib/mcp/tools/get-my-profile.ts
-import { createClient as createClient4 } from "npm:@supabase/supabase-js@^2.110.8";
 import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
-function supabaseForUser4(ctx) {
-  return createClient4(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
-    global: { headers: { Authorization: `Bearer ${ctx.getToken()}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 var get_my_profile_default = defineTool4({
   name: "get_my_profile",
   title: "Get my profile",
@@ -151,7 +134,7 @@ var get_my_profile_default = defineTool4({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
-    const { data, error } = await supabaseForUser4(ctx).from("profiles").select("id, email, full_name, dni, organization_name").eq("id", ctx.getUserId()).maybeSingle();
+    const { data, error } = await supabaseForUser(ctx).from("profiles").select("id, email, full_name, dni, organization_name").eq("id", ctx.getUserId()).maybeSingle();
     if (error) {
       return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
     }
