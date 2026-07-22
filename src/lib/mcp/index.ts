@@ -11,10 +11,10 @@ const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unse
 
 export default defineMcp({
   name: "accoro-mcp",
-  title: "Accoro",
+  title: "Cupo",
   version: "0.1.0",
   instructions:
-    "Tools for Accoro, an event ticketing app. Use `list_public_events` to browse events open for ticket sales, `list_my_events` and `create_event` to manage events you organize, and `get_my_profile` to read the signed-in user's profile.",
+    "Tools for Cupo, an event ticketing app. Use `list_public_events` to browse events open for ticket sales, `list_my_events` and `create_event` to manage events you organize, and `get_my_profile` to read the signed-in user's profile.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

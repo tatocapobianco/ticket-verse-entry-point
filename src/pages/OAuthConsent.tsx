@@ -120,9 +120,9 @@ const OAuthConsent = () => {
       <Card className="w-full max-w-md card-gradient startup-shadow border-border/50">
         <CardHeader className="text-center">
           <ShieldCheck className="h-10 w-10 mx-auto text-primary mb-2" />
-          <CardTitle className="text-xl">Conectar {clientName} a Accoro</CardTitle>
+          <CardTitle className="text-xl">Conectar {clientName} a Cupo</CardTitle>
           <CardDescription>
-            Esta aplicación podrá usar las herramientas de Accoro mientras iniciás sesión con tu cuenta.
+            Esta aplicación podrá usar las herramientas de Cupo mientras iniciás sesión con tu cuenta.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -137,11 +137,11 @@ const OAuthConsent = () => {
             </p>
             <ul className="list-disc list-inside space-y-1">
               <li>Ver tu perfil (nombre, email).</li>
-              <li>Listar y crear tus eventos en Accoro.</li>
+              <li>Listar y crear tus eventos en Cupo.</li>
               <li>Buscar eventos públicos disponibles.</li>
             </ul>
             <p className="text-xs">
-              Esto no le da acceso más allá de lo que ya podés hacer vos como usuario de Accoro.
+              Esto no le da acceso más allá de lo que ya podés hacer vos como usuario de Cupo.
             </p>
           </div>
           <div className="flex gap-2 pt-2">

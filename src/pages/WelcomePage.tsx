@@ -36,7 +36,7 @@ const WelcomePage = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-2">
             Bienvenido/a, {userName}
           </h1>
-          <p className="text-muted-foreground text-lg">¿Cómo quieres usar Accoro hoy?</p>
+          <p className="text-muted-foreground text-lg">¿Cómo quieres usar Cupo hoy?</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

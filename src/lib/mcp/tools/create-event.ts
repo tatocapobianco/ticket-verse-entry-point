@@ -13,7 +13,7 @@ function randomAccessKey() {
 export default defineTool({
   name: "create_event",
   title: "Create event",
-  description: "Create a new Accoro event owned by the signed-in user. Returns the created event including the auto-generated event number and access key that scanners will use.",
+  description: "Create a new Cupo event owned by the signed-in user. Returns the created event including the auto-generated event number and access key that scanners will use.",
   inputSchema: {
     name: z.string().describe("Event name shown to buyers."),
     description: z.string().optional().describe("Long description of the event."),

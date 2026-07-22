@@ -63,7 +63,7 @@ const Index = () => {
       toast.error(error.message);
       return;
     }
-    toast.success('¡Bienvenido a Accoro!');
+    toast.success('¡Bienvenido a Cupo!');
     navigate(nextPath ?? '/welcome', { replace: true });
   };
 
@@ -119,7 +119,7 @@ const Index = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-4">
-            Accoro
+            Cupo
           </h1>
           <p className="text-muted-foreground text-lg">Tu plataforma de eventos inteligente</p>
         </div>
