@@ -145,18 +145,70 @@ var get_my_profile_default = defineTool4({
   }
 });
 
+// src/lib/mcp/tools/list-my-tickets.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z4 } from "npm:zod@^3.23.8";
+var list_my_tickets_default = defineTool5({
+  name: "list_my_tickets",
+  title: "List my tickets",
+  description: "List all tickets owned by the signed-in Cupo user, including event and ticket-type info. QR codes are only viewable inside the app.",
+  inputSchema: {
+    limit: z4.number().int().min(1).max(200).optional().describe("Maximum number of tickets to return. Defaults to 100.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ limit }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const { data, error } = await supabaseForUser(ctx).from("tickets").select("id, qr_code, status, source, used_at, created_at, event:events(id, name, event_date, event_time, location), ticket_type:ticket_types(id, name, price)").eq("owner_id", ctx.getUserId()).order("created_at", { ascending: false }).limit(limit ?? 100);
+    if (error) {
+      return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? [], null, 2) }],
+      structuredContent: { tickets: data ?? [] }
+    };
+  }
+});
+
+// src/lib/mcp/tools/list-my-purchases.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z5 } from "npm:zod@^3.23.8";
+var list_my_purchases_default = defineTool6({
+  name: "list_my_purchases",
+  title: "List my purchases",
+  description: "List purchase orders made by the signed-in Cupo user, with the event and line items included.",
+  inputSchema: {
+    limit: z5.number().int().min(1).max(100).optional().describe("Maximum number of purchases to return. Defaults to 50.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ limit }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
+    const { data, error } = await supabaseForUser(ctx).from("purchases").select("id, subtotal, service_fee, total, status, created_at, event:events(id, name, event_date, location), items:purchase_items(id, quantity, unit_price, ticket_type:ticket_types(id, name))").eq("buyer_id", ctx.getUserId()).order("created_at", { ascending: false }).limit(limit ?? 50);
+    if (error) {
+      return { content: [{ type: "text", text: `Error: ${error.message}` }], isError: true };
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? [], null, 2) }],
+      structuredContent: { purchases: data ?? [] }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "cgqhpsysmwcmaluscdeh";
 var mcp_default = defineMcp({
   name: "accoro-mcp",
   title: "Cupo",
   version: "0.1.0",
-  instructions: "Tools for Cupo, an event ticketing app. Use `list_public_events` to browse events open for ticket sales, `list_my_events` and `create_event` to manage events you organize, and `get_my_profile` to read the signed-in user's profile.",
+  instructions: "Tools for Cupo, an event ticketing app. Use `list_public_events` to browse events open for ticket sales, `list_my_events` and `create_event` to manage events you organize, `list_my_tickets` and `list_my_purchases` to review the signed-in user's tickets and orders, and `get_my_profile` to read the signed-in user's profile.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [list_public_events_default, list_my_events_default, create_event_default, get_my_profile_default]
+  tools: [list_public_events_default, list_my_events_default, create_event_default, get_my_profile_default, list_my_tickets_default, list_my_purchases_default]
 });
 
 // lovable-mcp-supabase-entry.ts
