@@ -129,7 +129,7 @@ const ScannerDashboard = () => {
       case 'invalid_qr':
         return 'bg-red-500 text-white';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-muted/300 text-white';
     }
   };
 
@@ -162,13 +162,13 @@ const ScannerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">TicketPro</h1>
+              <h1 className="text-2xl font-bold text-foreground">Cupo</h1>
               <Badge variant="secondary" className="ml-3">Escaneador</Badge>
             </div>
             <Button variant="ghost" onClick={handleLogout}>
@@ -198,7 +198,7 @@ const ScannerDashboard = () => {
                   Escanear con Cámara
                 </Button>
                 
-                <div className="text-center text-gray-500">o</div>
+                <div className="text-center text-muted-foreground">o</div>
                 
                 <div className="flex space-x-2">
                   <Input
@@ -264,15 +264,15 @@ const ScannerDashboard = () => {
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {scanHistory.map((scan) => (
-                    <div key={scan.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={scan.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">
+                        <div className="text-sm font-medium text-foreground truncate">
                           {scan.attendeeName}
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="text-xs text-muted-foreground truncate">
                           {scan.eventName} - {scan.ticketType}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           {scan.timestamp}
                         </div>
                       </div>

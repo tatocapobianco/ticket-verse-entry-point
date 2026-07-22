@@ -22,7 +22,7 @@ function supabaseForUser(ctx) {
 var list_my_events_default = defineTool({
   name: "list_my_events",
   title: "List my events",
-  description: "List all events organized by the signed-in Accoro user (their own events, public or private).",
+  description: "List all events organized by the signed-in Cupo user (their own events, public or private).",
   inputSchema: {
     limit: z.number().int().min(1).max(100).optional().describe("Maximum number of events to return. Defaults to 50.")
   },
@@ -48,7 +48,7 @@ import { z as z2 } from "npm:zod@^3.23.8";
 var list_public_events_default = defineTool2({
   name: "list_public_events",
   title: "List public events",
-  description: "Browse public Accoro events. Returns upcoming events with basic info a buyer can use to decide which one to purchase tickets for.",
+  description: "Browse public Cupo events. Returns upcoming events with basic info a buyer can use to decide which one to purchase tickets for.",
   inputSchema: {
     search: z2.string().optional().describe("Optional substring to filter events by name."),
     limit: z2.number().int().min(1).max(50).optional().describe("Maximum number of events to return. Defaults to 20.")
@@ -85,7 +85,7 @@ function randomAccessKey() {
 var create_event_default = defineTool3({
   name: "create_event",
   title: "Create event",
-  description: "Create a new Accoro event owned by the signed-in user. Returns the created event including the auto-generated event number and access key that scanners will use.",
+  description: "Create a new Cupo event owned by the signed-in user. Returns the created event including the auto-generated event number and access key that scanners will use.",
   inputSchema: {
     name: z3.string().describe("Event name shown to buyers."),
     description: z3.string().optional().describe("Long description of the event."),
@@ -127,7 +127,7 @@ import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
 var get_my_profile_default = defineTool4({
   name: "get_my_profile",
   title: "Get my profile",
-  description: "Get the signed-in Accoro user's profile (name, email, DNI, organization).",
+  description: "Get the signed-in Cupo user's profile (name, email, DNI, organization).",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
@@ -149,9 +149,9 @@ var get_my_profile_default = defineTool4({
 var projectRef = "cgqhpsysmwcmaluscdeh";
 var mcp_default = defineMcp({
   name: "accoro-mcp",
-  title: "Accoro",
+  title: "Cupo",
   version: "0.1.0",
-  instructions: "Tools for Accoro, an event ticketing app. Use `list_public_events` to browse events open for ticket sales, `list_my_events` and `create_event` to manage events you organize, and `get_my_profile` to read the signed-in user's profile.",
+  instructions: "Tools for Cupo, an event ticketing app. Use `list_public_events` to browse events open for ticket sales, `list_my_events` and `create_event` to manage events you organize, and `get_my_profile` to read the signed-in user's profile.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"

@@ -84,16 +84,16 @@ const BuyerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Button variant="ghost" onClick={handleGoBack} className="mr-4">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h1 className="text-2xl font-bold text-gray-900">TicketPro</h1>
+              <h1 className="text-2xl font-bold text-foreground">Cupo</h1>
               <Badge variant="secondary" className="ml-3">Mis Eventos</Badge>
             </div>
             <div className="flex items-center space-x-4">
@@ -123,7 +123,7 @@ const BuyerDashboard = () => {
             {/* Buscador */}
             <div className="mb-8">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar eventos por nombre o ubicación..."
                   value={searchTerm}
@@ -147,11 +147,11 @@ const BuyerDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 mr-2" />
                         {event.date} - {event.time}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-muted-foreground">
                         <MapPin className="h-4 w-4 mr-2" />
                         {event.location}
                       </div>
@@ -159,7 +159,7 @@ const BuyerDashboard = () => {
                     
                     <div className="space-y-2">
                       {event.tickets.map((ticket) => (
-                        <div key={ticket.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div key={ticket.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                           <div>
                             <div className="font-medium">{ticket.type}</div>
                           </div>
@@ -174,7 +174,7 @@ const BuyerDashboard = () => {
                                 Comprar
                               </Button>
                             ) : (
-                              <div className="text-sm text-gray-500 mt-1">
+                              <div className="text-sm text-muted-foreground mt-1">
                                 Agotado
                               </div>
                             )}
@@ -216,14 +216,14 @@ const BuyerDashboard = () => {
                         <MapPin className="h-4 w-4 mr-2" />
                         {ticket.location}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Comprado: {ticket.purchaseDate}
                       </div>
                     </div>
                     
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <QrCode className="h-16 w-16 mx-auto mb-2 text-gray-400" />
-                      <div className="text-xs text-gray-600 mb-2">Código QR</div>
+                    <div className="text-center p-4 bg-muted/30 rounded-lg">
+                      <QrCode className="h-16 w-16 mx-auto mb-2 text-muted-foreground" />
+                      <div className="text-xs text-muted-foreground mb-2">Código QR</div>
                       <div className="font-mono text-sm">{ticket.qrCode}</div>
                       <Button
                         size="sm"
@@ -234,7 +234,7 @@ const BuyerDashboard = () => {
                       >
                         {ticket.isUsed ? 'Ticket Usado' : 'Ver QR Completo'}
                       </Button>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         ⚠️ Este QR es único e intransferible. Solo disponible en la app.
                       </p>
                     </div>

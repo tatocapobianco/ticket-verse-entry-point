@@ -4,7 +4,7 @@ import { supabaseForUser } from "../_supabase";
 export default defineTool({
   name: "get_my_profile",
   title: "Get my profile",
-  description: "Get the signed-in Accoro user's profile (name, email, DNI, organization).",
+  description: "Get the signed-in Cupo user's profile (name, email, DNI, organization).",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {

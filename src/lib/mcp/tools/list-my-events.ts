@@ -5,7 +5,7 @@ import { supabaseForUser } from "../_supabase";
 export default defineTool({
   name: "list_my_events",
   title: "List my events",
-  description: "List all events organized by the signed-in Accoro user (their own events, public or private).",
+  description: "List all events organized by the signed-in Cupo user (their own events, public or private).",
   inputSchema: {
     limit: z.number().int().min(1).max(100).optional().describe("Maximum number of events to return. Defaults to 50."),
   },

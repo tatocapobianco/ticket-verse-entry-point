@@ -5,7 +5,7 @@ import { supabaseForUser } from "../_supabase";
 export default defineTool({
   name: "list_public_events",
   title: "List public events",
-  description: "Browse public Accoro events. Returns upcoming events with basic info a buyer can use to decide which one to purchase tickets for.",
+  description: "Browse public Cupo events. Returns upcoming events with basic info a buyer can use to decide which one to purchase tickets for.",
   inputSchema: {
     search: z.string().optional().describe("Optional substring to filter events by name."),
     limit: z.number().int().min(1).max(50).optional().describe("Maximum number of events to return. Defaults to 20."),
