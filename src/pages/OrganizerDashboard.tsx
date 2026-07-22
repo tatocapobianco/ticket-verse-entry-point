@@ -400,7 +400,7 @@ const OrganizerDashboard = () => {
   const getStatusBadge = (status) => {
     switch(status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-600/20 text-green-400 border-green-600/30">Activo</Badge>;
+        return <Badge variant="default" className="bg-emerald-100 text-emerald-700 border-emerald-200">Activo</Badge>;
       case 'inactive':
         return <Badge variant="secondary">Inactivo</Badge>;
       case 'sold_out':
@@ -483,7 +483,7 @@ const OrganizerDashboard = () => {
               <h1 className="text-2xl font-bold bg-gradient-to-r brand-gradient-text">
                 Cupo
               </h1>
-              <Badge variant="secondary" className="ml-3 bg-green-600/20 text-green-400 border-green-600/30">
+              <Badge variant="secondary" className="ml-3 bg-emerald-100 text-emerald-700 border-emerald-200">
                 Organizador
               </Badge>
             </div>
