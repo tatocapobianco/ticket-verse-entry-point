@@ -44,7 +44,7 @@ const ScannerAccess = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <Button variant="ghost" onClick={handleGoBack} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -52,9 +52,9 @@ const ScannerAccess = () => {
         </Button>
 
         <div className="text-center">
-          <QrCode className="h-16 w-16 mx-auto mb-4 text-purple-600" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Acceso de Escaneador</h1>
-          <p className="text-gray-600">Ingresa los datos del evento para acceder al modo escaneador</p>
+          <QrCode className="h-16 w-16 mx-auto mb-4 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground mb-2">Acceso de Escaneador</h1>
+          <p className="text-muted-foreground">Ingresa los datos del evento para acceder al modo escaneador</p>
         </div>
 
         <Card className="shadow-xl">
@@ -74,7 +74,7 @@ const ScannerAccess = () => {
                 value={formData.eventNumber}
                 onChange={(e) => setFormData({...formData, eventNumber: e.target.value.toUpperCase()})}
               />
-              <p className="text-xs text-gray-500">Proporcionado por el organizador del evento</p>
+              <p className="text-xs text-muted-foreground">Proporcionado por el organizador del evento</p>
             </div>
             
             <div className="space-y-2">
@@ -86,10 +86,10 @@ const ScannerAccess = () => {
                 value={formData.accessKey}
                 onChange={(e) => setFormData({...formData, accessKey: e.target.value})}
               />
-              <p className="text-xs text-gray-500">Clave secreta del evento</p>
+              <p className="text-xs text-muted-foreground">Clave secreta del evento</p>
             </div>
             
-            <Button onClick={handleAccess} className="w-full bg-purple-600 hover:bg-purple-700">
+            <Button onClick={handleAccess} className="w-full bg-primary hover:bg-primary/90">
               Acceder al Modo Escaneador
             </Button>
           </CardContent>

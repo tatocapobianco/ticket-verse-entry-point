@@ -118,7 +118,7 @@ const Index = () => {
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl font-bold bg-gradient-to-r brand-gradient-text mb-4">
             Cupo
           </h1>
           <p className="text-muted-foreground text-lg">Tu plataforma de eventos inteligente</p>

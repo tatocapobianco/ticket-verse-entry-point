@@ -33,7 +33,7 @@ const WelcomePage = () => {
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r brand-gradient-text mb-2">
             Bienvenido/a, {userName}
           </h1>
           <p className="text-muted-foreground text-lg">¿Cómo quieres usar Cupo hoy?</p>
@@ -66,7 +66,7 @@ const WelcomePage = () => {
               <CardDescription>Crea y gestiona eventos</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+              <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                 Modo organizador
               </Button>
             </CardContent>
@@ -82,7 +82,7 @@ const WelcomePage = () => {
               <CardDescription>Valida entradas en eventos</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-white">
                 Modo escaneador
               </Button>
               <p className="text-xs text-muted-foreground mt-2 text-center">

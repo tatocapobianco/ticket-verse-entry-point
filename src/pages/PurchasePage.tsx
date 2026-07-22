@@ -69,21 +69,21 @@ const PurchasePage = () => {
 
   if (paymentStep === 'success') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center pt-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">¡Compra Exitosa!</h2>
-            <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
-              <div className="text-sm text-blue-800 font-medium mb-2">🔒 ¡Compra exitosa!</div>
-              <div className="text-sm text-blue-700">
+            <div className="bg-primary/5 p-4 rounded-lg mb-4 border border-primary/20">
+              <div className="text-sm text-primary font-medium mb-2">🔒 ¡Compra exitosa!</div>
+              <div className="text-sm text-primary">
                 Recibiste un email de confirmación con los detalles.<br/>
                 Tu ticket con código QR está disponible solo dentro de la app, en la sección "Mis Tickets". 
                 Recordá que el QR es único e intransferible.
               </div>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg mb-4">
-              <div className="text-sm text-gray-600">Código de compra:</div>
+            <div className="bg-muted/30 p-4 rounded-lg mb-4">
+              <div className="text-sm text-muted-foreground">Código de compra:</div>
               <div className="font-mono font-bold">CMP{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
             </div>
             <Button onClick={() => navigate('/buyer-dashboard')} className="w-full">
@@ -97,7 +97,7 @@ const PurchasePage = () => {
 
   if (paymentStep === 'summary') {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-muted/30">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Button variant="ghost" onClick={handleGoBack} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -113,8 +113,8 @@ const PurchasePage = () => {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">{eventData.name}</h3>
-                  <p className="text-gray-600">{eventData.date} - {eventData.time}</p>
-                  <p className="text-gray-600">{eventData.location}</p>
+                  <p className="text-muted-foreground">{eventData.date} - {eventData.time}</p>
+                  <p className="text-muted-foreground">{eventData.location}</p>
                 </div>
                 
                 <Separator />
@@ -151,7 +151,7 @@ const PurchasePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={handleGoBack} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -168,15 +168,15 @@ const PurchasePage = () => {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-xl font-semibold">{eventData.name}</h3>
-                  <p className="text-gray-600">{eventData.date} - {eventData.time}</p>
-                  <p className="text-gray-600">{eventData.location}</p>
+                  <p className="text-muted-foreground">{eventData.date} - {eventData.time}</p>
+                  <p className="text-muted-foreground">{eventData.location}</p>
                 </div>
                 
                 <Separator />
                 
                 <div>
                   <h4 className="font-medium mb-2">Tipo de Ticket</h4>
-                  <div className="bg-blue-50 p-3 rounded-lg">
+                  <div className="bg-primary/5 p-3 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{eventData.ticket.type}</span>
                       <span className="font-bold">${eventData.ticket.price.toLocaleString()}</span>
@@ -220,12 +220,12 @@ const PurchasePage = () => {
                     Comprar
                   </Button>
                 ) : (
-                  <div className="w-full text-center py-3 text-gray-500 font-medium">
+                  <div className="w-full text-center py-3 text-muted-foreground font-medium">
                     Agotado
                   </div>
                 )}
                 
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   Al continuar, aceptas nuestros términos y condiciones.
                 </p>
               </div>

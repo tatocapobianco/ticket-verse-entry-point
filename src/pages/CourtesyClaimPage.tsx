@@ -63,12 +63,12 @@ const CourtesyClaimPage = () => {
 
   if (!courtesyData.isValid) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center pt-6">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Link inválido</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Este link de cortesía no es válido o ya fue utilizado.
             </p>
             <Button onClick={() => navigate('/')} className="w-full">
@@ -82,12 +82,12 @@ const CourtesyClaimPage = () => {
 
   if (courtesyData.available === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center pt-6">
             <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Cortesías agotadas</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Todas las cortesías disponibles para este evento ya fueron reclamadas.
             </p>
             <Button onClick={() => navigate('/')} className="w-full">
@@ -101,17 +101,17 @@ const CourtesyClaimPage = () => {
 
   if (claimStep === 'success') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center pt-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">¡Cortesía Reclamada!</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Tu entrada de cortesía para <strong>{courtesyData.eventName}</strong> está lista.
             </p>
-            <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
-              <div className="text-sm text-blue-800 font-medium mb-2">🎫 Tu ticket:</div>
-              <div className="text-sm text-blue-700">
+            <div className="bg-primary/5 p-4 rounded-lg mb-4 border border-primary/20">
+              <div className="text-sm text-primary font-medium mb-2">🎫 Tu ticket:</div>
+              <div className="text-sm text-primary">
                 <strong>{courtesyData.ticketType}</strong><br/>
                 Tu ticket con código QR está disponible en la sección "Mis Tickets" de la aplicación.
               </div>
@@ -127,7 +127,7 @@ const CourtesyClaimPage = () => {
 
   if (claimStep === 'register') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center mb-2">
@@ -159,7 +159,7 @@ const CourtesyClaimPage = () => {
             <Button onClick={handleRegister} className="w-full">
               Crear cuenta y reclamar cortesía
             </Button>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Al continuar, aceptas nuestros términos y condiciones
             </p>
           </CardContent>
@@ -169,7 +169,7 @@ const CourtesyClaimPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center mb-2">
@@ -181,11 +181,11 @@ const CourtesyClaimPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="text-sm text-blue-800 font-medium mb-1">Evento:</div>
-            <div className="text-sm text-blue-700 font-semibold">{courtesyData.eventName}</div>
-            <div className="text-sm text-blue-700">Tipo: {courtesyData.ticketType}</div>
-            <div className="text-xs text-blue-600 mt-2">
+          <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+            <div className="text-sm text-primary font-medium mb-1">Evento:</div>
+            <div className="text-sm text-primary font-semibold">{courtesyData.eventName}</div>
+            <div className="text-sm text-primary">Tipo: {courtesyData.ticketType}</div>
+            <div className="text-xs text-primary mt-2">
               Disponibles: {courtesyData.available} de {courtesyData.total}
             </div>
           </div>
@@ -228,7 +228,7 @@ const CourtesyClaimPage = () => {
             Reclamar Cortesía
           </Button>
           
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-muted-foreground text-center">
             Esta cortesía es personal e intransferible
           </p>
         </CardContent>
