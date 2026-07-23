@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { Loader2, Mail, Lock, User, IdCard, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
+import cupoLogo from '@/assets/cupo-logo.png';
 
-// Only allow same-origin relative paths as post-auth destinations.
 function safeNext(raw: string | null): string | null {
   if (!raw) return null;
   if (!raw.startsWith('/') || raw.startsWith('//')) return null;
@@ -31,7 +31,6 @@ const Index = () => {
     confirmPassword: '',
   });
 
-  // If already signed in, jump straight to the destination.
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
@@ -50,7 +49,7 @@ const Index = () => {
 
   const handleLogin = async () => {
     if (!loginData.email || !loginData.password) {
-      toast.error('Por favor, completa todos los campos');
+      toast.error('Completá tu email y contraseña');
       return;
     }
     setLoading(true);
@@ -59,17 +58,14 @@ const Index = () => {
       password: loginData.password,
     });
     setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success('¡Bienvenido a Cupo!');
+    if (error) return toast.error(error.message);
+    toast.success('¡Hola de nuevo! 👋');
     navigate(nextPath ?? '/welcome', { replace: true });
   };
 
   const handleRegister = async () => {
     if (!registerData.name || !registerData.email || !registerData.password) {
-      toast.error('Por favor, completa nombre, email y contraseña');
+      toast.error('Completá nombre, email y contraseña');
       return;
     }
     if (registerData.password !== registerData.confirmPassword) {
@@ -83,25 +79,16 @@ const Index = () => {
       password: registerData.password,
       options: {
         emailRedirectTo,
-        data: {
-          full_name: registerData.name,
-          dni: registerData.dni,
-        },
+        data: { full_name: registerData.name, dni: registerData.dni },
       },
     });
     setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) return toast.error(error.message);
     toast.success('¡Cuenta creada! Revisá tu email si se pide confirmación.');
     navigate(nextPath ?? '/welcome', { replace: true });
   };
 
   const handleGoogleAuth = async () => {
-    // The redirect_uri must be a same-origin public URL. Send users to `/` with
-    // the next param preserved so onAuthStateChange lands them on the intended
-    // destination once Supabase hydrates the session.
     const redirectPath = nextPath ? `/?next=${encodeURIComponent(nextPath)}` : '/';
     const result = await lovable.auth.signInWithOAuth('google', {
       redirect_uri: window.location.origin + redirectPath,
@@ -110,134 +97,203 @@ const Index = () => {
       toast.error(result.error.message ?? 'No se pudo iniciar sesión con Google');
       return;
     }
-    if (result.redirected) return; // browser is redirecting
-    // Popup flow: session already set, listener will navigate.
+    if (result.redirected) return;
   };
 
+  const GoogleIcon = () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.2s2.7-6.2 6-6.2c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3 14.7 2 12 2 6.9 2 2.8 6.1 2.8 11.2S6.9 20.4 12 20.4c6.9 0 9.5-4.8 9.5-8.7 0-.6-.1-1-.1-1.5H12z"/>
+    </svg>
+  );
+
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r brand-gradient-text mb-4">
-            Cupo
-          </h1>
-          <p className="text-muted-foreground text-lg">Tu plataforma de eventos inteligente</p>
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Floating decorative blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-20 w-[28rem] h-[28rem] rounded-full bg-accent/15 blur-3xl" />
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-6">
+          <img
+            src={cupoLogo}
+            alt="Cupo"
+            className="mx-auto h-16 w-auto mb-4 drop-shadow-sm"
+          />
+          <p className="text-muted-foreground text-base flex items-center justify-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-accent" />
+            Descubrí, comprá y viví eventos
+          </p>
         </div>
 
-        <Card className="card-gradient startup-shadow border-border/50">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl">Bienvenido</CardTitle>
-            <CardDescription>Inicia sesión o crea tu cuenta</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-secondary/50">
-                <TabsTrigger value="login" className="data-[state=active]:bg-primary">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="register" className="data-[state=active]:bg-primary">Registrarse</TabsTrigger>
-              </TabsList>
+        <div className="glass-card rounded-3xl p-6 sm:p-8">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold font-display">Bienvenido/a</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Ingresá o creá tu cuenta en segundos
+            </p>
+          </div>
 
-              <TabsContent value="login" className="mt-6 space-y-4">
-                <Button onClick={handleGoogleAuth} variant="outline" className="w-full border-border hover:bg-secondary/50">
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Continuar con Google
-                </Button>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-secondary/70 rounded-full p-1 h-11">
+              <TabsTrigger
+                value="login"
+                className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium"
+              >
+                Iniciar sesión
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary font-medium"
+              >
+                Registrarse
+              </TabsTrigger>
+            </TabsList>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center"><Separator className="w-full" /></div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">O continúa con</span>
-                  </div>
-                </div>
+            <TabsContent value="login" className="mt-6 space-y-4">
+              <Button
+                onClick={handleGoogleAuth}
+                variant="outline"
+                className="w-full h-12 rounded-2xl border-border bg-white hover:bg-secondary/50 font-medium soft-shadow"
+              >
+                <GoogleIcon />
+                <span className="ml-2">Continuar con Google</span>
+              </Button>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="tu@email.com"
-                    value={loginData.email}
-                    onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                    className="bg-secondary/50 border-border" />
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center"><Separator /></div>
+                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                  <span className="bg-white px-3 text-muted-foreground">o con email</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input id="password" type="password"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    className="bg-secondary/50 border-border" />
-                </div>
-                <Button onClick={handleLogin} disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {loading ? 'Ingresando…' : 'Iniciar Sesión'}
-                </Button>
-              </TabsContent>
+              </div>
 
-              <TabsContent value="register" className="mt-6 space-y-4">
-                <Button onClick={handleGoogleAuth} variant="outline" className="w-full border-border hover:bg-secondary/50">
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Registrarse con Google
-                </Button>
+              <FieldWithIcon icon={<Mail className="h-4 w-4" />} label="Email o DNI" id="email">
+                <Input
+                  id="email"
+                  type="text"
+                  placeholder="tu@email.com o 12345678"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                  className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                />
+              </FieldWithIcon>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center"><Separator className="w-full" /></div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">O regístrate con</span>
-                  </div>
-                </div>
+              <FieldWithIcon icon={<Lock className="h-4 w-4" />} label="Contraseña" id="password">
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={loginData.password}
+                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                  className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                />
+              </FieldWithIcon>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre completo</Label>
-                  <Input id="name" type="text" placeholder="Juan Pérez"
-                    value={registerData.name}
-                    onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                    className="bg-secondary/50 border-border" />
+              <Button
+                onClick={handleLogin}
+                disabled={loading}
+                className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground font-semibold startup-shadow hover:opacity-95"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Ingresar'}
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="register" className="mt-6 space-y-4">
+              <Button
+                onClick={handleGoogleAuth}
+                variant="outline"
+                className="w-full h-12 rounded-2xl border-border bg-white hover:bg-secondary/50 font-medium soft-shadow"
+              >
+                <GoogleIcon />
+                <span className="ml-2">Registrarse con Google</span>
+              </Button>
+
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center"><Separator /></div>
+                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                  <span className="bg-white px-3 text-muted-foreground">o con email</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="regEmail">Email</Label>
-                  <Input id="regEmail" type="email" placeholder="tu@email.com"
-                    value={registerData.email}
-                    onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                    className="bg-secondary/50 border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dni">DNI (opcional)</Label>
-                  <Input id="dni" type="text" placeholder="12345678"
-                    value={registerData.dni}
-                    onChange={(e) => setRegisterData({ ...registerData, dni: e.target.value })}
-                    className="bg-secondary/50 border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="registerPassword">Contraseña</Label>
-                  <Input id="registerPassword" type="password"
+              </div>
+
+              <FieldWithIcon icon={<User className="h-4 w-4" />} label="Nombre completo" id="name">
+                <Input
+                  id="name" type="text" placeholder="Juan Pérez"
+                  value={registerData.name}
+                  onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                  className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                />
+              </FieldWithIcon>
+
+              <FieldWithIcon icon={<Mail className="h-4 w-4" />} label="Email" id="regEmail">
+                <Input
+                  id="regEmail" type="email" placeholder="tu@email.com"
+                  value={registerData.email}
+                  onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                  className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                />
+              </FieldWithIcon>
+
+              <FieldWithIcon icon={<IdCard className="h-4 w-4" />} label="DNI (opcional)" id="dni">
+                <Input
+                  id="dni" type="text" placeholder="12345678"
+                  value={registerData.dni}
+                  onChange={(e) => setRegisterData({ ...registerData, dni: e.target.value })}
+                  className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                />
+              </FieldWithIcon>
+
+              <div className="grid grid-cols-1 gap-4">
+                <FieldWithIcon icon={<Lock className="h-4 w-4" />} label="Contraseña" id="registerPassword">
+                  <Input
+                    id="registerPassword" type="password" placeholder="••••••••"
                     value={registerData.password}
                     onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                    className="bg-secondary/50 border-border" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-                  <Input id="confirmPassword" type="password"
+                    className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                  />
+                </FieldWithIcon>
+                <FieldWithIcon icon={<Lock className="h-4 w-4" />} label="Repetir contraseña" id="confirmPassword">
+                  <Input
+                    id="confirmPassword" type="password" placeholder="••••••••"
                     value={registerData.confirmPassword}
                     onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                    className="bg-secondary/50 border-border" />
-                </div>
-                <Button onClick={handleRegister} disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {loading ? 'Creando…' : 'Crear Cuenta'}
-                </Button>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                    className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                  />
+                </FieldWithIcon>
+              </div>
+
+              <Button
+                onClick={handleRegister}
+                disabled={loading}
+                className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground font-semibold startup-shadow hover:opacity-95"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear cuenta'}
+              </Button>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Al continuar aceptás nuestros <span className="underline">Términos</span> y{' '}
+          <span className="underline">Política de Privacidad</span>.
+        </p>
       </div>
     </div>
   );
 };
+
+function FieldWithIcon({
+  icon, label, id, children,
+}: { icon: React.ReactNode; label: string; id: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-sm font-medium text-foreground/80">{label}</Label>
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+          {icon}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default Index;

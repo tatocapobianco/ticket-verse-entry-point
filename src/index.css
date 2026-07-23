@@ -1,49 +1,52 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Cupo design system — light, modern, friendly */
+/* Cupo — brand system: violeta vibrante + naranja cálido, blanco/gris muy claro,
+   tipografía Poppins (headings) + Inter (body). Simple, cercano, alegre. */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 12%;
+    --background: 250 40% 99%;
+    --foreground: 240 15% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 12%;
+    --card-foreground: 240 15% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 12%;
+    --popover-foreground: 240 15% 12%;
 
+    /* Cupo violet #7C3AED */
     --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 262 90% 72%;
 
-    --secondary: 240 10% 96%;
-    --secondary-foreground: 240 10% 12%;
+    --secondary: 250 30% 96%;
+    --secondary-foreground: 240 15% 12%;
 
-    --muted: 240 10% 96%;
-    --muted-foreground: 240 5% 45%;
+    --muted: 240 20% 96%;
+    --muted-foreground: 240 8% 42%;
 
+    /* Cupo orange #F97316 */
     --accent: 24 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 90%;
-    --input: 240 10% 90%;
+    --border: 240 15% 91%;
+    --input: 240 15% 91%;
     --ring: 262 83% 58%;
 
-    --radius: 0.85rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 20%;
+    --sidebar-foreground: 240 15% 20%;
     --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 96%;
-    --sidebar-accent-foreground: 240 10% 12%;
-    --sidebar-border: 240 10% 90%;
+    --sidebar-accent: 250 30% 96%;
+    --sidebar-accent-foreground: 240 15% 12%;
+    --sidebar-border: 240 15% 91%;
     --sidebar-ring: 262 83% 58%;
   }
 }
@@ -57,26 +60,57 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    letter-spacing: -0.01em;
   }
 }
 
-/* Cupo brand utilities */
+/* ---- Cupo brand utilities ---- */
+
 .gradient-bg {
-  background: linear-gradient(180deg, hsl(240, 20%, 99%) 0%, hsl(262, 60%, 97%) 100%);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, hsl(262 90% 92% / 0.7), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, hsl(24 95% 90% / 0.6), transparent 60%),
+    linear-gradient(180deg, hsl(250 40% 99%) 0%, hsl(250 40% 97%) 100%);
 }
 
 .card-gradient {
   background: #ffffff;
-  border: 1px solid hsl(240, 10%, 92%);
+  border: 1px solid hsl(240 15% 92%);
+}
+
+.glass-card {
+  background: linear-gradient(180deg, hsl(0 0% 100% / 0.85), hsl(0 0% 100% / 0.7));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid hsl(0 0% 100% / 0.75);
+  box-shadow:
+    0 30px 60px -20px hsl(262 83% 58% / 0.18),
+    0 8px 24px -12px hsl(240 15% 20% / 0.10),
+    inset 0 1px 0 hsl(0 0% 100% / 0.9);
 }
 
 .startup-shadow {
-  box-shadow: 0 4px 20px -6px hsla(262, 83%, 58%, 0.15), 0 2px 6px -2px hsla(240, 10%, 20%, 0.06);
+  box-shadow:
+    0 10px 30px -12px hsl(262 83% 58% / 0.22),
+    0 4px 10px -4px hsl(240 15% 20% / 0.08);
+}
+
+.soft-shadow {
+  box-shadow: 0 6px 20px -10px hsl(240 15% 20% / 0.12);
 }
 
 .brand-gradient-text {
-  background: linear-gradient(135deg, hsl(262, 83%, 58%), hsl(24, 95%, 53%));
+  background: linear-gradient(135deg, hsl(262 83% 58%), hsl(24 95% 53%));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.brand-gradient-bg {
+  background: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 85% 62%));
 }
