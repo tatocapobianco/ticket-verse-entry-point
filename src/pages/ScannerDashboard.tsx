@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { QrCode, CheckCircle, XCircle, Clock, Camera, Search } from 'lucide-react';
+import { QrCode, CheckCircle, XCircle, Clock, Camera, Search, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import cupoLogo from '@/assets/cupo-logo.png';
 
 const ScannerDashboard = () => {
   const navigate = useNavigate();
@@ -127,9 +128,9 @@ const ScannerDashboard = () => {
       case 'invalid_event':
       case 'expired':
       case 'invalid_qr':
-        return 'bg-red-500 text-white';
+        return 'bg-destructive text-destructive-foreground';
       default:
-        return 'bg-muted/300 text-white';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -162,17 +163,17 @@ const ScannerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <header className="bg-card shadow-sm border-b">
+    <div className="min-h-screen gradient-bg">
+      <header className="bg-white/70 backdrop-blur-md border-b border-border sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-foreground">Cupo</h1>
-              <Badge variant="secondary" className="ml-3">Escaneador</Badge>
+            <div className="flex items-center gap-3">
+              <img src={cupoLogo} alt="Cupo" className="h-8 w-auto" />
+              <Badge variant="secondary" className="rounded-full">Escaneador</Badge>
             </div>
-            <Button variant="ghost" onClick={handleLogout}>
-              Cerrar Sesión
+            <Button variant="ghost" onClick={handleLogout} className="rounded-full">
+              <LogOut className="h-4 w-4 mr-2" />
+              Salir
             </Button>
           </div>
         </div>
@@ -180,34 +181,34 @@ const ScannerDashboard = () => {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Panel de Escaneo */}
           <div className="space-y-6">
-            <Card>
+            <Card className="rounded-3xl soft-shadow border-border/70">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <QrCode className="h-5 w-5 mr-2" />
+                <CardTitle className="flex items-center font-display">
+                  <QrCode className="h-5 w-5 mr-2 text-primary" />
                   Escanear Ticket
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button
                   onClick={handleScanCamera}
-                  className="w-full h-12 bg-blue-600 hover:bg-blue-700"
+                  className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground font-semibold startup-shadow hover:opacity-95"
                 >
                   <Camera className="h-5 w-5 mr-2" />
                   Escanear con Cámara
                 </Button>
-                
-                <div className="text-center text-muted-foreground">o</div>
-                
+
+                <div className="text-center text-xs uppercase tracking-wider text-muted-foreground">o</div>
+
                 <div className="flex space-x-2">
                   <Input
                     placeholder="Código QR manual"
                     value={manualCode}
                     onChange={(e) => setManualCode(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleManualScan()}
+                    className="h-11 rounded-2xl bg-secondary/40 border-border"
                   />
-                  <Button onClick={handleManualScan} variant="outline">
+                  <Button onClick={handleManualScan} variant="outline" className="rounded-2xl h-11">
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
@@ -216,11 +217,11 @@ const ScannerDashboard = () => {
 
             {/* Resultado del Escaneo */}
             {scanResult && (
-              <Card className={`border-l-4 ${
-                scanResult.valid ? 'border-l-green-500' : 'border-l-red-500'
+              <Card className={`rounded-3xl border-l-4 soft-shadow ${
+                scanResult.valid ? 'border-l-green-500' : 'border-l-destructive'
               }`}>
                 <CardContent className="pt-6">
-                  <div className={`rounded-lg p-4 ${getStatusColor(scanResult.status)}`}>
+                  <div className={`rounded-2xl p-4 ${getStatusColor(scanResult.status)}`}>
                     <div className="flex items-center justify-center space-x-2 mb-3">
                       {getStatusIcon(scanResult.status)}
                       <span className="text-xl font-bold">
@@ -229,7 +230,7 @@ const ScannerDashboard = () => {
                     </div>
                     
                     {scanResult.valid && scanResult.ticket && (
-                      <div className="text-center space-y-1 text-white">
+                      <div className="text-center space-y-1">
                         <div className="text-lg font-semibold">{scanResult.ticket.attendeeName}</div>
                         <div>{scanResult.ticket.eventName}</div>
                         <div>{scanResult.ticket.ticketType}</div>
@@ -240,7 +241,7 @@ const ScannerDashboard = () => {
                     )}
                     
                     {!scanResult.valid && (
-                      <div className="text-center text-white">
+                      <div className="text-center">
                         <div className="text-sm">{scanResult.message}</div>
                         {scanResult.scannedAt && (
                           <div className="text-xs opacity-90 mt-1">
@@ -257,14 +258,14 @@ const ScannerDashboard = () => {
 
           {/* Historial de Escaneos */}
           <div>
-            <Card>
+            <Card className="rounded-3xl soft-shadow border-border/70">
               <CardHeader>
-                <CardTitle>Historial de Escaneos</CardTitle>
+                <CardTitle className="font-display">Historial de Escaneos</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {scanHistory.map((scan) => (
-                    <div key={scan.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div key={scan.id} className="flex items-center justify-between p-3 bg-secondary/40 rounded-2xl">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-foreground truncate">
                           {scan.attendeeName}

@@ -69,7 +69,7 @@ const PurchasePage = () => {
 
   if (paymentStep === 'success') {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+      <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center pt-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
@@ -97,7 +97,7 @@ const PurchasePage = () => {
 
   if (paymentStep === 'summary') {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen gradient-bg">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Button variant="ghost" onClick={handleGoBack} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -151,7 +151,7 @@ const PurchasePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen gradient-bg">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Button variant="ghost" onClick={handleGoBack} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
