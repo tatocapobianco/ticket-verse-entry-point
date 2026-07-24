@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gift, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import cupoLogo from '@/assets/cupo-logo.png';
 
 const CourtesyClaimPage = () => {
   const { courtesyCode } = useParams();
