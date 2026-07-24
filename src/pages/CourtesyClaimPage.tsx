@@ -65,7 +65,7 @@ const CourtesyClaimPage = () => {
   if (!courtesyData.isValid) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md rounded-3xl soft-shadow border-border/70">
           <CardContent className="text-center pt-6">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Link inválido</h2>
@@ -84,7 +84,7 @@ const CourtesyClaimPage = () => {
   if (courtesyData.available === 0) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md rounded-3xl soft-shadow border-border/70">
           <CardContent className="text-center pt-6">
             <AlertCircle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Cortesías agotadas</h2>
@@ -103,7 +103,7 @@ const CourtesyClaimPage = () => {
   if (claimStep === 'success') {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md rounded-3xl soft-shadow border-border/70">
           <CardContent className="text-center pt-6">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">¡Cortesía Reclamada!</h2>
@@ -129,7 +129,7 @@ const CourtesyClaimPage = () => {
   if (claimStep === 'register') {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md rounded-3xl soft-shadow border-border/70">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center mb-2">
               <Gift className="h-6 w-6 mr-2 text-primary" />
@@ -157,7 +157,7 @@ const CourtesyClaimPage = () => {
                 className="bg-secondary/50 border-border"
               />
             </div>
-            <Button onClick={handleRegister} className="w-full">
+            <Button onClick={handleRegister} className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground startup-shadow">
               Crear cuenta y reclamar cortesía
             </Button>
             <p className="text-xs text-muted-foreground text-center">
@@ -171,7 +171,7 @@ const CourtesyClaimPage = () => {
 
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md rounded-3xl soft-shadow border-border/70">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center mb-2">
             <Gift className="h-6 w-6 mr-2 text-primary" />
@@ -225,7 +225,7 @@ const CourtesyClaimPage = () => {
             </TabsContent>
           </Tabs>
 
-          <Button onClick={handleClaim} className="w-full">
+          <Button onClick={handleClaim} className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground startup-shadow">
             Reclamar Cortesía
           </Button>
           
