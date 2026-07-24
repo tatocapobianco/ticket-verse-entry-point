@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Calendar, MapPin, Ticket, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import cupoLogo from '@/assets/cupo-logo.png';
 
 type EventRow = {
   id: string;
@@ -111,25 +112,33 @@ const BuyerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-card shadow-sm border-b">
+    <div className="min-h-screen gradient-bg">
+      <header className="bg-white/70 backdrop-blur-md border-b border-border sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Button variant="ghost" onClick={() => navigate('/welcome')} className="mr-4">
+          <div className="flex justify-between items-center h-16 gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/welcome')} className="rounded-full shrink-0">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h1 className="text-2xl font-bold text-foreground">Cupo</h1>
-              <Badge variant="secondary" className="ml-3">Mis Eventos</Badge>
+              <img src={cupoLogo} alt="Cupo" className="h-8 w-auto" />
+              <Badge variant="secondary" className="rounded-full hidden sm:inline-flex">Mis Eventos</Badge>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant={!showMyTickets ? 'default' : 'outline'} onClick={() => setShowMyTickets(false)}>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={!showMyTickets ? 'default' : 'outline'}
+                onClick={() => setShowMyTickets(false)}
+                className={`rounded-full ${!showMyTickets ? 'brand-gradient-bg text-primary-foreground' : ''}`}
+              >
                 Eventos
               </Button>
-              <Button variant={showMyTickets ? 'default' : 'outline'} onClick={() => setShowMyTickets(true)}>
+              <Button
+                variant={showMyTickets ? 'default' : 'outline'}
+                onClick={() => setShowMyTickets(true)}
+                className={`rounded-full ${showMyTickets ? 'brand-gradient-bg text-primary-foreground' : ''}`}
+              >
                 Mis Tickets
               </Button>
-              <Button variant="ghost" onClick={handleLogout}>Cerrar Sesión</Button>
+              <Button variant="ghost" onClick={handleLogout} className="rounded-full hidden sm:inline-flex">Salir</Button>
             </div>
           </div>
         </div>
@@ -159,7 +168,7 @@ const BuyerDashboard = () => {
                 {filteredEvents.map((event) => {
                   const sellable = (event.ticket_types ?? []).filter(t => !t.is_courtesy);
                   return (
-                    <Card key={event.id} className="hover:shadow-lg transition-shadow">
+                    <Card key={event.id} className="rounded-3xl overflow-hidden border-border/70 soft-shadow hover:startup-shadow hover:-translate-y-1 transition-all duration-300">
                       <CardHeader>
                         <img
                           src={event.image_url || '/placeholder.svg'}
@@ -197,7 +206,7 @@ const BuyerDashboard = () => {
                                 <div className="text-right">
                                   <div className="text-lg font-bold">${Number(ticket.price).toLocaleString()}</div>
                                   {!soldOut ? (
-                                    <Button size="sm" onClick={() => handleBuyTicket(event.id, ticket.id)} className="mt-1">
+                                    <Button size="sm" onClick={() => handleBuyTicket(event.id, ticket.id)} className="mt-1 rounded-full brand-gradient-bg text-primary-foreground">
                                       Comprar
                                     </Button>
                                   ) : (
@@ -217,7 +226,7 @@ const BuyerDashboard = () => {
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-bold mb-6">Mis Tickets</h2>
+            <h2 className="text-2xl font-bold font-display mb-6">Mis Tickets</h2>
             {loadingTickets ? (
               <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : tickets.length === 0 ? (
@@ -228,7 +237,7 @@ const BuyerDashboard = () => {
                   const used = ticket.status === 'used' || !!ticket.used_at;
                   const revealed = revealedQR[ticket.id];
                   return (
-                    <Card key={ticket.id} className="border-l-4 border-l-primary">
+                    <Card key={ticket.id} className="rounded-3xl border-l-4 border-l-primary soft-shadow">
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                           <span>{ticket.event?.name ?? 'Evento'}</span>
