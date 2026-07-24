@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle, Copy, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Users, DollarSign, Settings, Gift, Key, Edit, Ticket, Mail, Link, BarChart, AlertTriangle, Copy, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import cupoLogo from '@/assets/cupo-logo.png';
 
 const OrganizerDashboard = () => {
   const navigate = useNavigate();
@@ -474,21 +475,19 @@ const OrganizerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border">
+    <div className="min-h-screen gradient-bg">
+      <header className="bg-white/70 backdrop-blur-md border-b border-border sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r brand-gradient-text">
-                Cupo
-              </h1>
-              <Badge variant="secondary" className="ml-3 bg-emerald-100 text-emerald-700 border-emerald-200">
+            <div className="flex items-center gap-3">
+              <img src={cupoLogo} alt="Cupo" className="h-8 w-auto" />
+              <Badge variant="secondary" className="rounded-full bg-accent/10 text-accent border-accent/20">
                 Organizador
               </Badge>
             </div>
-            <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
-              Cerrar Sesión
+            <Button variant="ghost" onClick={handleLogout} className="rounded-full text-muted-foreground hover:text-foreground">
+              <LogOut className="h-4 w-4 mr-2" />
+              Salir
             </Button>
           </div>
         </div>
@@ -503,10 +502,10 @@ const OrganizerDashboard = () => {
 
           <TabsContent value="events" className="mt-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Mis Eventos</h2>
+              <h2 className="text-2xl font-bold font-display">Mis Eventos</h2>
               <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
                 <DialogTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button className="rounded-full brand-gradient-bg text-primary-foreground startup-shadow hover:opacity-95">
                     <Plus className="h-4 w-4 mr-2" />
                     Crear Evento
                   </Button>
