@@ -17,6 +17,7 @@ import CourtesyClaimPage from "./pages/CourtesyClaimPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
+import MercadoPagoCallback from "./pages/MercadoPagoCallback";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/cortesia/:courtesyCode" element={<CourtesyClaimPage />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+            <Route path="/auth/mercadopago/callback" element={
+              <ProtectedRoute><MercadoPagoCallback /></ProtectedRoute>
+            } />
+
+
 
             {/* Auth-required */}
             <Route path="/verify-email" element={

@@ -52,8 +52,13 @@ const OrganizerOnboarding = () => {
     navigate('/organizer-dashboard');
   };
 
-  const handleConnectMP = () => {
-    toast.info('La conexión con MercadoPago se activará cuando aprueben el Marketplace. Por ahora podés seguir creando eventos.');
+  const handleConnectMP = async () => {
+    const { data, error } = await supabase.functions.invoke('mp-oauth-start');
+    if (error || !(data as any)?.url) {
+      toast.error((data as any)?.error ?? error?.message ?? 'No se pudo iniciar la conexión con MercadoPago');
+      return;
+    }
+    window.location.href = (data as any).url;
   };
 
   return (
