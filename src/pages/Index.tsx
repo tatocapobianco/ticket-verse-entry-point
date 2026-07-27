@@ -186,6 +186,7 @@ const Index = () => {
                   id="email"
                   type="text"
                   placeholder="tu@email.com o 12345678"
+                  autoComplete="username"
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
