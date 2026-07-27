@@ -143,6 +143,11 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          mp_access_token: string | null
+          mp_connected_at: string | null
+          mp_public_key: string | null
+          mp_refresh_token: string | null
+          mp_user_id: string | null
           organization_name: string | null
           updated_at: string
         }
@@ -152,6 +157,11 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          mp_access_token?: string | null
+          mp_connected_at?: string | null
+          mp_public_key?: string | null
+          mp_refresh_token?: string | null
+          mp_user_id?: string | null
           organization_name?: string | null
           updated_at?: string
         }
@@ -161,6 +171,11 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          mp_access_token?: string | null
+          mp_connected_at?: string | null
+          mp_public_key?: string | null
+          mp_refresh_token?: string | null
+          mp_user_id?: string | null
           organization_name?: string | null
           updated_at?: string
         }
@@ -490,6 +505,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       events_public: {
@@ -593,10 +629,29 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      email_for_dni: { Args: { _dni: string }; Returns: string }
+      get_courtesy_link_by_code: {
+        Args: { _code: string }
+        Returns: {
+          event_id: string
+          expires_at: string
+          id: string
+          is_active: boolean
+          max_uses: number
+          ticket_type_id: string
+          uses_count: number
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "buyer" | "organizer" | "scanner" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -723,6 +778,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["buyer", "organizer", "scanner", "admin"],
+    },
   },
 } as const
