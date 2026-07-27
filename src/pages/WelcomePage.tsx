@@ -1,40 +1,37 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, QrCode, Users, LogOut, Sparkles, ArrowRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Calendar, QrCode, Users, LogOut, Sparkles, ArrowRight, MailWarning } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import cupoLogo from '@/assets/cupo-logo.png';
 
 const WelcomePage = () => {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState<string>('');
+  const { user, roles, emailVerified, signOut } = useAuth();
+  const userName =
+    (user?.user_metadata as any)?.full_name ||
+    (user?.user_metadata as any)?.name ||
+    user?.email?.split('@')[0] ||
+    'Usuario';
 
-  useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      if (!data.session) {
-        navigate('/', { replace: true });
-        return;
-      }
-      const meta = (data.session.user.user_metadata ?? {}) as Record<string, any>;
-      setUserName(meta.full_name || meta.name || data.session.user.email?.split('@')[0] || 'Usuario');
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [navigate]);
+  const isOrganizer = roles.includes('organizer');
 
   const handleModeSelection = (mode: 'buyer' | 'organizer' | 'scanner') => {
-    localStorage.setItem('currentMode', mode);
-    if (mode === 'buyer') navigate('/buyer-dashboard');
-    else if (mode === 'organizer') navigate('/organizer-dashboard');
-    else navigate('/scanner-access');
+    if (mode === 'buyer') {
+      if (!emailVerified) {
+        navigate('/verify-email');
+        return;
+      }
+      navigate('/buyer-dashboard');
+    } else if (mode === 'organizer') {
+      if (isOrganizer) navigate('/organizer-dashboard');
+      else navigate('/organizer-onboarding');
+    } else {
+      navigate('/scanner-access');
+    }
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    localStorage.clear();
+    await signOut();
     navigate('/');
   };
 
