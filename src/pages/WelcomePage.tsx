@@ -46,8 +46,8 @@ const WelcomePage = () => {
     },
     {
       key: 'organizer' as const,
-      title: 'Modo Organizador',
-      subtitle: 'Creá y gestioná tus eventos',
+      title: isOrganizer ? 'Modo Organizador' : 'Ser Organizador',
+      subtitle: isOrganizer ? 'Creá y gestioná tus eventos' : 'Activá tu cuenta de organizador',
       icon: Users,
       accentClass: 'from-accent to-primary',
       iconBg: 'bg-accent/10 text-accent',
@@ -88,6 +88,18 @@ const WelcomePage = () => {
             ¿Cómo querés usar Cupo hoy?
           </p>
         </div>
+
+        {!emailVerified && (
+          <button
+            onClick={() => navigate('/verify-email')}
+            className="w-full mb-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 flex items-center gap-3 text-sm text-left hover:bg-amber-100 transition-colors"
+          >
+            <MailWarning className="h-5 w-5 shrink-0" />
+            <span>
+              <strong>Verificá tu email</strong> para poder comprar entradas. Tocá acá para reenviar.
+            </span>
+          </button>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
           {modes.map(({ key, title, subtitle, icon: Icon, iconBg }) => (
