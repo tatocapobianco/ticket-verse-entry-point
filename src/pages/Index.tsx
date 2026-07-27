@@ -49,12 +49,27 @@ const Index = () => {
 
   const handleLogin = async () => {
     if (!loginData.email || !loginData.password) {
-      toast.error('Completá tu email y contraseña');
+      toast.error('Completá tu email o DNI y contraseña');
       return;
     }
     setLoading(true);
+    let emailToUse = loginData.email.trim();
+
+    // If it looks like a DNI (only digits), look up the associated email
+    if (/^\d{6,12}$/.test(emailToUse)) {
+      const { data: resolvedEmail, error: dniErr } = await supabase.rpc('email_for_dni', {
+        _dni: emailToUse,
+      });
+      if (dniErr || !resolvedEmail) {
+        setLoading(false);
+        toast.error('No encontramos una cuenta con ese DNI');
+        return;
+      }
+      emailToUse = resolvedEmail as string;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: loginData.email.trim(),
+      email: emailToUse,
       password: loginData.password,
     });
     setLoading(false);
@@ -171,6 +186,7 @@ const Index = () => {
                   id="email"
                   type="text"
                   placeholder="tu@email.com o 12345678"
+                  autoComplete="username"
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
