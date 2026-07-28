@@ -19,10 +19,12 @@ Deno.serve(async (req) => {
     if (!userData?.user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const clientId = Deno.env.get("MERCADOPAGO_CLIENT_ID")!;
-    const redirect = Deno.env.get("MERCADOPAGO_REDIRECT_URI")!;
-    const state = userData.user.id; // simple state = user id
+    // Must exactly match the Redirect URI registered in the MercadoPago app.
+    const redirect = "https://ticket-verse-entry-point.lovable.app/auth/mercadopago/callback";
+    const state = userData.user.id;
 
-    const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${state}&redirect_uri=${encodeURIComponent(redirect)}`;
+    const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${encodeURIComponent(clientId)}&response_type=code&platform_id=mp&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(redirect)}`;
+    console.log("mp-oauth-start redirect_uri:", redirect, "client_id:", clientId);
     return new Response(JSON.stringify({ url: authUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
 
     const clientId = Deno.env.get("MERCADOPAGO_CLIENT_ID")!;
     const clientSecret = Deno.env.get("MERCADOPAGO_CLIENT_SECRET")!;
-    const redirect = Deno.env.get("MERCADOPAGO_REDIRECT_URI")!;
+    const redirect = "https://ticket-verse-entry-point.lovable.app/auth/mercadopago/callback";
 
     const tokenRes = await fetch("https://api.mercadopago.com/oauth/token", {
       method: "POST",
