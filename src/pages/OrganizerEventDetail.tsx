@@ -59,6 +59,7 @@ const OrganizerEventDetail = () => {
   const [loading, setLoading] = useState(true);
   const [ev, setEv] = useState<EventRow | null>(null);
   const [tickets, setTickets] = useState<TicketTypeRow[]>([]);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [links, setLinks] = useState<CourtesyLinkRow[]>([]);
   const [scannedByTicket, setScannedByTicket] = useState<Record<string, number>>({});
   const [courtesyByTicket, setCourtesyByTicket] = useState<Record<string, number>>({});
@@ -69,7 +70,7 @@ const OrganizerEventDetail = () => {
   const [rrpps, setRrpps] = useState<RrppRow[]>([]);
   const [eventRrpps, setEventRrpps] = useState<EventRrppRow[]>([]);
   const [rrppSalesByEventRrpp, setRrppSalesByEventRrpp] = useState<Record<string, number>>({});
-  const [erForm, setErForm] = useState({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' as 'general' | 'unique' });
+  const [erForm, setErForm] = useState({ rrpp_name: '', max_tickets: '', max_courtesies: '0', link_type: 'general' as 'general' | 'unique' });
 
   // ticket form
   const [ticketSheetOpen, setTicketSheetOpen] = useState(false);
