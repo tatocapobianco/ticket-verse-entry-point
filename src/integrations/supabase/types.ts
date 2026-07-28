@@ -853,6 +853,16 @@ export type Database = {
           uses_count: number
         }[]
       }
+      get_event_rrpp_by_code: {
+        Args: { _code: string }
+        Returns: {
+          active: boolean
+          event_id: string
+          id: string
+          link_type: string
+          rrpp_id: string
+        }[]
+      }
       get_ticket_type_auth_code: {
         Args: { _ticket_type_id: string }
         Returns: string
