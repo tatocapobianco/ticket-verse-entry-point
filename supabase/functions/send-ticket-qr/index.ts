@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey}` },
       body: JSON.stringify({
-        from: 'Cupo <onboarding@resend.dev>',
+        from: 'Cupo <noreply@cupotickets.com>',
         to: [to],
         subject: `Tu QR - ${ev?.name ?? 'Cupo'}`,
         html,
