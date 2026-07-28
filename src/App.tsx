@@ -21,6 +21,7 @@ import OAuthConsent from "./pages/OAuthConsent";
 import MercadoPagoCallback from "./pages/MercadoPagoCallback";
 import PublicEventsPage from "./pages/PublicEventsPage";
 import PublicEventPage from "./pages/PublicEventPage";
+import OrganizerEventDetail from "./pages/OrganizerEventDetail";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,9 @@ const App = () => (
             } />
             <Route path="/organizer-dashboard" element={
               <ProtectedRoute requireRole="organizer"><OrganizerDashboard /></ProtectedRoute>
+            } />
+            <Route path="/organizer/events/:id" element={
+              <ProtectedRoute requireRole="organizer"><OrganizerEventDetail /></ProtectedRoute>
             } />
             <Route path="/scanner-access" element={
               <ProtectedRoute><ScannerAccess /></ProtectedRoute>

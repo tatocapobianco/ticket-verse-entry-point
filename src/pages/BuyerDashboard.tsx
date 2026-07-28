@@ -230,7 +230,12 @@ const BuyerDashboard = () => {
             {loadingTickets ? (
               <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
             ) : tickets.length === 0 ? (
-              <p className="text-center text-muted-foreground py-16">Todavía no tenés tickets.</p>
+              <div className="text-center py-16 space-y-3">
+                <p className="text-muted-foreground">Todavía no compraste ninguna entrada. ¡Explorá los eventos!</p>
+                <Button onClick={() => navigate('/eventos')} className="rounded-full brand-gradient-bg text-primary-foreground">
+                  Ver eventos
+                </Button>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {tickets.map((ticket) => {

@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { CreditCard, ArrowLeft, Loader2, Calendar, MapPin, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { formatEventDate, formatARS } from '@/lib/format';
 
 const SERVICE_FEE = 0.15;
 
@@ -182,17 +183,17 @@ const PurchasePage = () => {
             <CardContent className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold">{ev.name}</h3>
-                <p className="text-sm text-muted-foreground">{ev.event_date} {ev.event_time}</p>
-                <p className="text-sm text-muted-foreground">{ev.location}</p>
+                <p className="text-sm text-muted-foreground">{formatEventDate(ev.event_date, ev.event_time)}</p>
+                {ev.location && <p className="text-sm text-muted-foreground">{ev.location}</p>}
               </div>
               <Separator />
-              <div className="flex justify-between"><span>Ticket: {ticket.name} ({quantity}x)</span><span>${subtotal.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Cargo por servicio</span><span>${fee.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Precio del ticket ({quantity}x)</span><span>{formatARS(subtotal)}</span></div>
+              <div className="flex justify-between text-sm text-muted-foreground"><span>Cargo por servicio (15%)</span><span>{formatARS(fee)}</span></div>
               <Separator />
-              <div className="flex justify-between text-lg font-bold"><span>Total</span><span>${total.toLocaleString()}</span></div>
+              <div className="flex justify-between text-lg font-bold"><span>Total a pagar</span><span>{formatARS(total)}</span></div>
               <Button onClick={handlePay} disabled={processing || secondsLeft === 0} className="w-full rounded-full brand-gradient-bg text-primary-foreground" size="lg">
                 {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
-                {secondsLeft === 0 ? 'Reserva expirada' : 'Finalizar compra'}
+                {secondsLeft === 0 ? 'Reserva expirada' : `Pagar ${formatARS(total)}`}
               </Button>
               <p className="text-xs text-muted-foreground text-center">Protegido por reCAPTCHA.</p>
             </CardContent>
@@ -213,12 +214,12 @@ const PurchasePage = () => {
             <CardHeader><CardTitle>Detalles del evento</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <h3 className="text-xl font-semibold">{ev.name}</h3>
-              {ev.event_date && <div className="flex items-center text-sm text-muted-foreground"><Calendar className="h-4 w-4 mr-2" />{ev.event_date} {ev.event_time}</div>}
+              {ev.event_date && <div className="flex items-center text-sm text-muted-foreground"><Calendar className="h-4 w-4 mr-2" />{formatEventDate(ev.event_date, ev.event_time)}</div>}
               {ev.location && <div className="flex items-center text-sm text-muted-foreground"><MapPin className="h-4 w-4 mr-2" />{ev.location}</div>}
               <Separator />
               <div className="bg-primary/5 p-3 rounded-lg flex justify-between items-center">
                 <span className="font-medium">{ticket.name}</span>
-                <span className="font-bold">${Number(ticket.price).toLocaleString()}</span>
+                <span className="font-bold">{formatARS(ticket.price)}</span>
               </div>
             </CardContent>
           </Card>
