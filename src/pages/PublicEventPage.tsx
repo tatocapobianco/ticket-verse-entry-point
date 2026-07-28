@@ -92,12 +92,12 @@ const PublicEventPage = () => {
             ) : tickets.map((t) => {
               const sold = isSoldOut(t);
               const handleBuy = () => {
+                const path = `/purchase/${event.id}/${t.id}`;
                 if (!user) {
-                  sessionStorage.setItem('post_login_redirect', `/purchase/${event.id}/${t.id}`);
-                  navigate('/');
+                  navigate(`/?next=${encodeURIComponent(path)}`);
                   return;
                 }
-                navigate(`/purchase/${event.id}/${t.id}`);
+                navigate(path);
               };
               return (
                 <div key={t.id} className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-secondary/40 flex-wrap">
