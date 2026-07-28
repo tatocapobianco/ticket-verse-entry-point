@@ -18,6 +18,7 @@ import {
 import {
   ArrowLeft, Plus, Ticket, Gift, Link as LinkIcon, BarChart3, Settings,
   Loader2, Copy, Trash2, Eye, EyeOff, AlertTriangle, MapPin, Calendar,
+  Megaphone, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,12 @@ type CourtesyLinkRow = {
   max_uses: number; uses_count: number; is_active: boolean;
   label: string | null;
 };
+type RrppRow = { id: string; name: string; contact: string | null };
+type EventRrppRow = {
+  id: string; event_id: string; rrpp_id: string;
+  max_tickets: number | null; max_courtesies: number;
+  link_type: 'general' | 'unique'; link_code: string; active: boolean;
+};
 
 const genCode = (prefix = '', len = 6) =>
   prefix + Math.random().toString(36).slice(2, 2 + len).toUpperCase();
@@ -57,6 +64,12 @@ const OrganizerEventDetail = () => {
   const [courtesyByTicket, setCourtesyByTicket] = useState<Record<string, number>>({});
   const [revenueTotal, setRevenueTotal] = useState(0);
   const [showKey, setShowKey] = useState(false);
+
+  // rrpps
+  const [rrpps, setRrpps] = useState<RrppRow[]>([]);
+  const [eventRrpps, setEventRrpps] = useState<EventRrppRow[]>([]);
+  const [rrppSalesByEventRrpp, setRrppSalesByEventRrpp] = useState<Record<string, number>>({});
+  const [erForm, setErForm] = useState({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' as 'general' | 'unique' });
 
   // ticket form
   const [ticketSheetOpen, setTicketSheetOpen] = useState(false);
