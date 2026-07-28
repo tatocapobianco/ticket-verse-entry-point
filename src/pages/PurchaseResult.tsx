@@ -19,13 +19,13 @@ const PurchaseResult = () => {
         const { data } = await supabase.from('purchases').select('status').eq('id', id).single();
         if (cancelled) return;
         if (data?.status === 'paid') {
-          // Attribute to RRPP if the buyer arrived via an RRPP link
           const erId = sessionStorage.getItem('rrpp_event_rrpp_id');
           if (erId) {
-            await supabase.from('rrpp_sales').insert({ event_rrpp_id: erId, purchase_id: id }).then(() => {
-              sessionStorage.removeItem('rrpp_event_rrpp_id');
-              sessionStorage.removeItem('rrpp_link_code');
-            }).catch(() => {});
+            try {
+              await supabase.from('rrpp_sales').insert({ event_rrpp_id: erId, purchase_id: id });
+            } catch {}
+            sessionStorage.removeItem('rrpp_event_rrpp_id');
+            sessionStorage.removeItem('rrpp_link_code');
           }
           setStatus('paid');
           return;
