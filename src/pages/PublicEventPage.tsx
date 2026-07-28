@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Loader2, AlertCircle, LogIn } from 'lucide-react';
 import cupoLogo from '@/assets/cupo-logo.png';
+import { useAuth } from '@/hooks/useAuth';
 
 const PublicEventPage = () => {
   const { id } = useParams();
