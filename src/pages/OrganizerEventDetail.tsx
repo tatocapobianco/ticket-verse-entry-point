@@ -640,13 +640,12 @@ const OrganizerEventDetail = () => {
                       <option value="unique">Único</option>
                     </select>
                   </div>
-                    <div className="md:col-span-5">
-                      <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
-                        <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
-                      </Button>
-                    </div>
+                  <div className="md:col-span-5">
+                    <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
+                      <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
+                    </Button>
                   </div>
-                )}
+                </div>
 
                 {eventRrpps.length === 0 ? (
                   <div className="text-center py-8 text-sm text-muted-foreground">
