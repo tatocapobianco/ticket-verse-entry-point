@@ -181,6 +181,30 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string | null
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       purchase_items: {
         Row: {
           created_at: string
@@ -399,6 +423,7 @@ export type Database = {
           price: number
           quantity_sold: number
           quantity_total: number | null
+          requires_auth_code: boolean
           status: string
           updated_at: string
           valid_from: string | null
@@ -415,6 +440,7 @@ export type Database = {
           price?: number
           quantity_sold?: number
           quantity_total?: number | null
+          requires_auth_code?: boolean
           status?: string
           updated_at?: string
           valid_from?: string | null
@@ -431,6 +457,7 @@ export type Database = {
           price?: number
           quantity_sold?: number
           quantity_total?: number | null
+          requires_auth_code?: boolean
           status?: string
           updated_at?: string
           valid_from?: string | null
@@ -674,6 +701,13 @@ export type Database = {
       }
     }
     Functions: {
+      check_purchase_rate_limit: {
+        Args: { _ip: string; _user_id: string }
+        Returns: {
+          allowed: boolean
+          reason: string
+        }[]
+      }
       email_for_dni: { Args: { _dni: string }; Returns: string }
       get_courtesy_link_by_code: {
         Args: { _code: string }
@@ -686,6 +720,10 @@ export type Database = {
           ticket_type_id: string
           uses_count: number
         }[]
+      }
+      get_ticket_type_auth_code: {
+        Args: { _ticket_type_id: string }
+        Returns: string
       }
       has_role: {
         Args: {
@@ -711,6 +749,10 @@ export type Database = {
           ticket_id: string
           ticket_type_name: string
         }[]
+      }
+      verify_ticket_auth_code: {
+        Args: { _code: string; _ticket_type_id: string }
+        Returns: boolean
       }
     }
     Enums: {
