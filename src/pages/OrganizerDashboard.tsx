@@ -53,7 +53,7 @@ const OrganizerDashboard = () => {
   const [saving, setSaving] = useState(false);
 
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '' });
-  const [newTicket, setNewTicket] = useState({ name: '', description: '', price: '', quantity: '', is_courtesy: false });
+  const [newTicket, setNewTicket] = useState({ name: '', description: '', price: '', quantity: '', is_courtesy: false, auth_code: '' });
 
   const load = async () => {
     if (!user) return;
@@ -107,6 +107,7 @@ const OrganizerDashboard = () => {
     if (!showCreateTicket) return;
     if (!newTicket.name) { toast.error('Ingresá el nombre del ticket'); return; }
     setSaving(true);
+    const code = newTicket.auth_code.trim();
     const { error } = await supabase.from('ticket_types').insert({
       event_id: showCreateTicket,
       name: newTicket.name,
@@ -116,12 +117,14 @@ const OrganizerDashboard = () => {
       quantity_sold: 0,
       is_courtesy: newTicket.is_courtesy,
       status: 'active',
+      authorization_code: code || null,
+      requires_auth_code: !!code,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Ticket creado');
     setShowCreateTicket(null);
-    setNewTicket({ name: '', description: '', price: '', quantity: '', is_courtesy: false });
+    setNewTicket({ name: '', description: '', price: '', quantity: '', is_courtesy: false, auth_code: '' });
     load();
   };
 
@@ -333,6 +336,11 @@ const OrganizerDashboard = () => {
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Precio</Label><Input type="number" disabled={newTicket.is_courtesy} value={newTicket.price} onChange={(e) => setNewTicket({ ...newTicket, price: e.target.value })} className="rounded-2xl" /></div>
               <div><Label>Stock</Label><Input type="number" value={newTicket.quantity} onChange={(e) => setNewTicket({ ...newTicket, quantity: e.target.value })} className="rounded-2xl" /></div>
+            </div>
+            <div>
+              <Label>Código de autorización (opcional)</Label>
+              <Input value={newTicket.auth_code} onChange={(e) => setNewTicket({ ...newTicket, auth_code: e.target.value })} placeholder="Ej: PRENSA2025" className="rounded-2xl" />
+              <p className="text-xs text-muted-foreground mt-1">Si lo activás, solo quienes ingresen este código podrán comprar el ticket (ideal para prensa, VIP, invitados).</p>
             </div>
           </div>
           <DialogFooter>

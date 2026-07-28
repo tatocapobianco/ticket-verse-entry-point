@@ -1,10 +1,28 @@
 // Create MercadoPago Checkout Pro preference for a stock reservation.
-// Uses Cupo's platform MP account (MERCADOPAGO_ACCESS_TOKEN). 15% service fee is
-// added to the buyer-facing price.
+// - Verifies reCAPTCHA v3
+// - Enforces rate limits (10 attempts/min per IP, 3 failed payments/15min per user)
+// - Validates optional ticket authorization code
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const SERVICE_FEE = 0.15;
+const RECAPTCHA_MIN_SCORE = 0.5;
+
+async function verifyRecaptcha(token: string, ip: string | null): Promise<boolean> {
+  const secret = Deno.env.get('RECAPTCHA_SECRET_KEY');
+  if (!secret) return true; // if not configured, don't block
+  if (!token) return false;
+  const params = new URLSearchParams({ secret, response: token });
+  if (ip) params.append('remoteip', ip);
+  const r = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  });
+  if (!r.ok) return false;
+  const j = await r.json();
+  return j.success === true && (typeof j.score !== 'number' || j.score >= RECAPTCHA_MIN_SCORE);
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -22,8 +40,35 @@ Deno.serve(async (req) => {
     const user = userRes?.user;
     if (!user) return json({ error: 'unauthorized' }, 401);
 
-    const { reservation_id } = await req.json();
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || null;
+
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    // Rate limit gate
+    const { data: rl } = await admin.rpc('check_purchase_rate_limit', { _ip: ip, _user_id: user.id });
+    const rlRow = Array.isArray(rl) ? rl[0] : rl;
+    if (rlRow && rlRow.allowed === false) {
+      return json({
+        error: 'rate_limited',
+        reason: rlRow.reason,
+        message: rlRow.reason === 'user_blocked_15min'
+          ? 'Demasiados pagos fallidos. Esperá 15 minutos antes de reintentar.'
+          : 'Demasiados intentos. Esperá un minuto antes de reintentar.',
+      }, 429);
+    }
+
+    const { reservation_id, recaptcha_token, auth_code } = await req.json();
     if (!reservation_id) return json({ error: 'reservation_id required' }, 400);
+
+    // reCAPTCHA
+    const captchaOk = await verifyRecaptcha(recaptcha_token, ip);
+    if (!captchaOk) {
+      await admin.from('purchase_attempts').insert({ ip, user_id: user.id, success: false });
+      return json({ error: 'captcha_failed', message: 'No pudimos verificar que no seas un bot. Actualizá la página e intentá de nuevo.' }, 400);
+    }
 
     // Load reservation (RLS ensures ownership)
     const { data: reservation, error: resErr } = await supabase
@@ -35,11 +80,15 @@ Deno.serve(async (req) => {
     if (reservation.status !== 'active') return json({ error: 'reservation_inactive' }, 400);
     if (new Date(reservation.expires_at) < new Date()) return json({ error: 'reservation_expired' }, 400);
 
-    // Admin client for join across events
-    const admin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
+    // Verify authorization code if the ticket type requires one
+    const { data: codeOk } = await admin.rpc('verify_ticket_auth_code', {
+      _ticket_type_id: reservation.ticket_type_id,
+      _code: auth_code ?? null,
+    });
+    if (codeOk !== true) {
+      await admin.from('purchase_attempts').insert({ ip, user_id: user.id, success: false });
+      return json({ error: 'invalid_auth_code', message: 'El código de autorización es inválido.' }, 403);
+    }
 
     const { data: ticketType } = await admin
       .from('ticket_types')
@@ -53,7 +102,6 @@ Deno.serve(async (req) => {
     const fee = Math.round(subtotal * SERVICE_FEE);
     const total = subtotal + fee;
 
-    // Create pending purchase
     const { data: purchase, error: pErr } = await admin
       .from('purchases')
       .insert({
@@ -103,10 +151,14 @@ Deno.serve(async (req) => {
     if (!mpRes.ok) {
       const t = await mpRes.text();
       console.error('MP error', mpRes.status, t);
+      await admin.from('purchase_attempts').insert({ ip, user_id: user.id, success: false });
       return json({ error: 'mp_error', details: t }, mpRes.status);
     }
     const pref = await mpRes.json();
     await admin.from('purchases').update({ mp_preference_id: pref.id }).eq('id', purchase.id);
+
+    // Record attempt (pending — settled by webhook)
+    await admin.from('purchase_attempts').insert({ ip, user_id: user.id, success: false });
 
     return json({
       preference_id: pref.id,

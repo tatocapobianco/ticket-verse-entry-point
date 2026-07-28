@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, ArrowLeft, Loader2, Calendar, MapPin } from 'lucide-react';
+import { CreditCard, ArrowLeft, Loader2, Calendar, MapPin, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,26 +16,50 @@ type TicketType = {
   name: string;
   price: number;
   status: string;
+  requires_auth_code: boolean;
   event: { id: string; name: string; event_date: string | null; event_time: string | null; location: string | null } | null;
 };
 
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (cb: () => void) => void;
+      execute: (key: string, opts: { action: string }) => Promise<string>;
+    };
+  }
+}
+
+const loadRecaptcha = (siteKey: string) =>
+  new Promise<void>((resolve) => {
+    if (document.querySelector(`script[data-cupo-recaptcha]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+    s.async = true;
+    s.defer = true;
+    s.dataset.cupoRecaptcha = '1';
+    s.onload = () => resolve();
+    document.head.appendChild(s);
+  });
+
 const PurchasePage = () => {
-  const { eventId, ticketId } = useParams();
+  const { ticketId } = useParams();
   const navigate = useNavigate();
   const [ticket, setTicket] = useState<TicketType | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [authCode, setAuthCode] = useState('');
   const [step, setStep] = useState<'details' | 'summary'>('details');
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [now, setNow] = useState(Date.now());
   const [processing, setProcessing] = useState(false);
+  const [recaptchaKey, setRecaptchaKey] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
         .from('ticket_types')
-        .select('id, name, price, status, event:events!inner(id, name, event_date, event_time, location)')
+        .select('id, name, price, status, requires_auth_code, event:events!inner(id, name, event_date, event_time, location)')
         .eq('id', ticketId!)
         .single();
       if (error || !data) {
@@ -49,6 +73,17 @@ const PurchasePage = () => {
   }, [ticketId, navigate]);
 
   useEffect(() => {
+    (async () => {
+      const { data } = await supabase.functions.invoke('public-config');
+      const key = (data as any)?.recaptcha_site_key;
+      if (key) {
+        setRecaptchaKey(key);
+        await loadRecaptcha(key);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (!expiresAt) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
@@ -60,8 +95,24 @@ const PurchasePage = () => {
   const fee = Math.round(subtotal * SERVICE_FEE);
   const total = subtotal + fee;
 
+  const getCaptchaToken = async (action: string): Promise<string | null> => {
+    if (!recaptchaKey || !window.grecaptcha) return null;
+    return new Promise((resolve) => {
+      window.grecaptcha!.ready(async () => {
+        try {
+          const token = await window.grecaptcha!.execute(recaptchaKey, { action });
+          resolve(token);
+        } catch { resolve(null); }
+      });
+    });
+  };
+
   const handleReserve = async () => {
     if (!ticket) return;
+    if (ticket.requires_auth_code && !authCode.trim()) {
+      toast.error('Este ticket requiere un código de autorización');
+      return;
+    }
     setProcessing(true);
     const { data, error } = await supabase.rpc('reserve_stock', {
       _ticket_type_id: ticket.id, _quantity: quantity,
@@ -80,16 +131,27 @@ const PurchasePage = () => {
   const handlePay = async () => {
     if (!reservationId) return;
     setProcessing(true);
+    const recaptcha_token = await getCaptchaToken('purchase');
     const { data, error } = await supabase.functions.invoke('mp-create-preference', {
-      body: { reservation_id: reservationId },
+      body: {
+        reservation_id: reservationId,
+        recaptcha_token,
+        auth_code: ticket?.requires_auth_code ? authCode.trim() : null,
+      },
     });
     setProcessing(false);
-    if (error || !data?.init_point) {
-      toast.error('No se pudo iniciar el pago');
-      console.error(error, data);
+    const payload = data as any;
+    if (error || payload?.error) {
+      const msg = payload?.message || payload?.error || 'No se pudo iniciar el pago';
+      toast.error(msg);
+      console.error(error, payload);
       return;
     }
-    window.location.href = data.init_point;
+    if (!payload?.init_point) {
+      toast.error('No se pudo iniciar el pago');
+      return;
+    }
+    window.location.href = payload.init_point;
   };
 
   if (loading || !ticket) {
@@ -132,6 +194,7 @@ const PurchasePage = () => {
                 {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
                 {secondsLeft === 0 ? 'Reserva expirada' : 'Finalizar compra'}
               </Button>
+              <p className="text-xs text-muted-foreground text-center">Protegido por reCAPTCHA.</p>
             </CardContent>
           </Card>
         </div>
@@ -165,6 +228,14 @@ const PurchasePage = () => {
               <Label htmlFor="q">Cantidad</Label>
               <Input id="q" type="number" min={1} max={10} value={quantity}
                 onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} />
+              {ticket.requires_auth_code && (
+                <div>
+                  <Label htmlFor="auth" className="flex items-center gap-1"><Lock className="h-3 w-3" /> Código de autorización</Label>
+                  <Input id="auth" value={authCode} onChange={(e) => setAuthCode(e.target.value)}
+                    placeholder="Ingresá el código exclusivo" className="rounded-2xl" />
+                  <p className="text-xs text-muted-foreground mt-1">Este ticket es exclusivo. Necesitás el código provisto por el organizador.</p>
+                </div>
+              )}
               {soldOut ? (
                 <div className="text-center py-3 text-muted-foreground font-medium">Agotado</div>
               ) : (

@@ -1,17 +1,53 @@
-// MercadoPago webhook. On approved payment: mark purchase paid, decrement stock,
-// generate tickets, and trigger confirmation email.
+// MercadoPago webhook. Validates x-signature, marks purchase paid,
+// decrements stock, generates tickets, and triggers confirmation email.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+
+async function verifyMpSignature(req: Request, dataId: string): Promise<boolean> {
+  const secret = Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET');
+  if (!secret) {
+    console.warn('MERCADOPAGO_WEBHOOK_SECRET not set — rejecting webhook');
+    return false;
+  }
+  const sigHeader = req.headers.get('x-signature');
+  const requestId = req.headers.get('x-request-id') ?? '';
+  if (!sigHeader) return false;
+
+  // "ts=1700000000,v1=abcdef..."
+  const parts = Object.fromEntries(
+    sigHeader.split(',').map((s) => s.trim().split('=').map((x) => x.trim())) as [string, string][],
+  );
+  const ts = parts['ts'];
+  const v1 = parts['v1'];
+  if (!ts || !v1) return false;
+
+  const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(manifest));
+  const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return hex === v1;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const raw = await req.text();
+    const body = raw ? JSON.parse(raw) : {};
     const url = new URL(req.url);
     const topic = body.type || body.topic || url.searchParams.get('type') || url.searchParams.get('topic');
     const paymentId = body.data?.id || url.searchParams.get('data.id') || url.searchParams.get('id');
     if (topic !== 'payment' || !paymentId) return new Response('ignored', { status: 200 });
+
+    // Signature verification
+    const ok = await verifyMpSignature(req, String(paymentId));
+    if (!ok) {
+      console.error('Invalid MP webhook signature');
+      return new Response('invalid_signature', { status: 401 });
+    }
 
     const mpToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')!;
     const payRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
@@ -41,20 +77,20 @@ Deno.serve(async (req) => {
       status: dbStatus, mp_payment_id: String(paymentId),
     }).eq('id', purchase.id);
 
+    // Record success/failure for user rate limiting
+    if (dbStatus === 'rejected') {
+      await admin.from('purchase_attempts').insert({
+        user_id: purchase.buyer_id, success: false,
+      });
+    }
+
     if (dbStatus !== 'paid') return new Response('ok', { status: 200 });
     if (purchase.status === 'paid') return new Response('already_paid', { status: 200 });
 
-    // Load items and generate tickets
     const { data: items } = await admin.from('purchase_items')
       .select('ticket_type_id, quantity, unit_price').eq('purchase_id', purchase.id);
 
-    const createdTickets: string[] = [];
     for (const it of items ?? []) {
-      // decrement stock via reservation consumption
-      await admin.from('ticket_types').update({
-        quantity_sold: (undefined as any),
-      }).eq('id', it.ticket_type_id);
-      // safer: raw rpc-less increment
       await admin.rpc('release_expired_reservations');
       const { data: tt } = await admin.from('ticket_types')
         .select('quantity_sold, quantity_total, status').eq('id', it.ticket_type_id).single();
@@ -66,7 +102,7 @@ Deno.serve(async (req) => {
       }).eq('id', it.ticket_type_id);
 
       for (let i = 0; i < it.quantity; i++) {
-        const { data: tk } = await admin.from('tickets').insert({
+        await admin.from('tickets').insert({
           event_id: purchase.event_id,
           ticket_type_id: it.ticket_type_id,
           purchase_id: purchase.id,
@@ -74,17 +110,19 @@ Deno.serve(async (req) => {
           owner_email: purchase.buyer_email,
           source: 'purchase',
           status: 'valid',
-        }).select('id').single();
-        if (tk) createdTickets.push(tk.id);
+        });
       }
     }
 
-    // consume reservation
     if (reservationId) {
       await admin.from('stock_reservations').update({ status: 'consumed' }).eq('id', reservationId);
     }
 
-    // Trigger confirmation email (best-effort)
+    // Mark success attempt
+    await admin.from('purchase_attempts').insert({
+      user_id: purchase.buyer_id, success: true,
+    });
+
     try {
       await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-purchase-email`, {
         method: 'POST',
