@@ -147,7 +147,7 @@ const OrganizerDashboard = () => {
           </CardContent>
         </Card>
 
-        <RrppSection />
+
 
 
         <div className="flex items-center justify-between">
