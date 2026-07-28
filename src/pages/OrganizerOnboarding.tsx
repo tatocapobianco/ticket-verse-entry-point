@@ -35,14 +35,11 @@ const OrganizerOnboarding = () => {
       return;
     }
 
-    // Grant organizer role
-    const { error: roleErr } = await supabase
-      .from('user_roles')
-      .insert({ user_id: user.id, role: 'organizer' as const });
+    // Grant organizer role via server-side function (RLS blocks direct client insert)
+    const { error: roleErr } = await supabase.rpc('self_assign_role', { _role: 'organizer' });
 
     setLoading(false);
-    // Ignore duplicate errors
-    if (roleErr && !roleErr.message.toLowerCase().includes('duplicate')) {
+    if (roleErr) {
       toast.error(roleErr.message);
       return;
     }
