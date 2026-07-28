@@ -571,6 +571,100 @@ const OrganizerEventDetail = () => {
             </Card>
           </TabsContent>
 
+          {/* RRPPs */}
+          <TabsContent value="rrpps" className="mt-4">
+            <Card className="glass-card rounded-2xl">
+              <CardHeader>
+                <CardTitle className="font-display">RRPPs del evento</CardTitle>
+                <CardDescription>Asigná RRPPs con cupo, tipo de link y activá/desactivá.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {rrpps.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Todavía no tenés RRPPs cargados. Creá uno desde el panel del organizador.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+                    <div className="md:col-span-2">
+                      <Label>RRPP</Label>
+                      <select
+                        value={erForm.rrpp_id}
+                        onChange={(e) => setErForm({ ...erForm, rrpp_id: e.target.value })}
+                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
+                      >
+                        <option value="">Elegí un RRPP</option>
+                        {rrpps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Cupo tickets</Label>
+                      <Input type="number" min="0" placeholder="∞" value={erForm.max_tickets}
+                        onChange={(e) => setErForm({ ...erForm, max_tickets: e.target.value })} className="rounded-2xl" />
+                    </div>
+                    <div>
+                      <Label>Cortesías</Label>
+                      <Input type="number" min="0" value={erForm.max_courtesies}
+                        onChange={(e) => setErForm({ ...erForm, max_courtesies: e.target.value })} className="rounded-2xl" />
+                    </div>
+                    <div>
+                      <Label>Tipo de link</Label>
+                      <select
+                        value={erForm.link_type}
+                        onChange={(e) => setErForm({ ...erForm, link_type: e.target.value as 'general' | 'unique' })}
+                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
+                      >
+                        <option value="general">General</option>
+                        <option value="unique">Único</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-5">
+                      <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
+                        <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {eventRrpps.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    No hay RRPPs asignados a este evento.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {eventRrpps.map((er) => {
+                      const rrpp = rrpps.find(r => r.id === er.rrpp_id);
+                      const sold = rrppSalesByEventRrpp[er.id] || 0;
+                      return (
+                        <div key={er.id} className="p-3 rounded-xl bg-secondary/30 flex flex-wrap items-center gap-3">
+                          <div className="flex-1 min-w-[180px]">
+                            <p className="font-medium">{rrpp?.name ?? 'RRPP'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Vendidas {sold}{er.max_tickets ? ` / ${er.max_tickets}` : ''} · Cortesías {er.max_courtesies} · {er.link_type === 'unique' ? 'Único' : 'General'}
+                            </p>
+                          </div>
+                          <Badge variant={er.active ? 'default' : 'secondary'}>
+                            {er.active ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                          <Button size="sm" variant="outline" className="rounded-full" onClick={() => copyRrppLink(er)}>
+                            <Copy className="h-3.5 w-3.5 mr-1" /> Link
+                          </Button>
+                          <Button size="sm" variant="outline" className="rounded-full" onClick={() => toggleEventRrpp(er)}>
+                            {er.active ? 'Desactivar' : 'Activar'}
+                          </Button>
+                          <Button size="sm" variant="ghost" className="rounded-full text-destructive" onClick={() => removeEventRrpp(er)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
+
           {/* STATS */}
           <TabsContent value="stats" className="mt-4">
             <Card className="glass-card rounded-2xl">
