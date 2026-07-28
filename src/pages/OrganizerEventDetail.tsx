@@ -256,6 +256,38 @@ const OrganizerEventDetail = () => {
     load();
   };
 
+  const assignRrpp = async () => {
+    if (!ev) return;
+    if (!erForm.rrpp_id) return toast.error('Elegí un RRPP');
+    const code = genCode('R', 8);
+    const { error } = await supabase.from('event_rrpps').insert({
+      event_id: ev.id, rrpp_id: erForm.rrpp_id,
+      max_tickets: erForm.max_tickets ? Number(erForm.max_tickets) : null,
+      max_courtesies: Number(erForm.max_courtesies || 0),
+      link_type: erForm.link_type, link_code: code, active: true,
+    });
+    if (error) return toast.error(error.message);
+    toast.success('RRPP asignado');
+    setErForm({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
+    load();
+  };
+  const toggleEventRrpp = async (er: EventRrppRow) => {
+    const { error } = await supabase.from('event_rrpps').update({ active: !er.active }).eq('id', er.id);
+    if (error) return toast.error(error.message);
+    load();
+  };
+  const removeEventRrpp = async (er: EventRrppRow) => {
+    const { error } = await supabase.from('event_rrpps').delete().eq('id', er.id);
+    if (error) return toast.error(error.message);
+    toast.success('RRPP removido');
+    load();
+  };
+  const copyRrppLink = async (er: EventRrppRow) => {
+    const url = `${window.location.origin}/rrpp/${er.link_code}`;
+    await navigator.clipboard.writeText(url);
+    toast.success('Link copiado');
+  };
+
   const revoke = async (linkId: string) => {
     const { error } = await supabase.from('courtesy_links').update({ is_active: false }).eq('id', linkId);
     if (error) return toast.error(error.message);
