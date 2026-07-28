@@ -269,18 +269,29 @@ const OrganizerEventDetail = () => {
   };
 
   const assignRrpp = async () => {
-    if (!ev) return;
-    if (!erForm.rrpp_id) return toast.error('Elegí un RRPP');
+    if (!ev || !user) return;
+    const name = erForm.rrpp_name.trim();
+    if (!name) return toast.error('Ingresá el nombre del RRPP');
+    // Find existing RRPP by name (case-insensitive) or create new one
+    let rrppId = rrpps.find(r => r.name.toLowerCase() === name.toLowerCase())?.id;
+    if (!rrppId) {
+      const { data: created, error: cErr } = await supabase
+        .from('rrpps').insert({ organizer_id: user.id, name })
+        .select('id, name, contact').single();
+      if (cErr || !created) return toast.error(cErr?.message ?? 'No se pudo crear el RRPP');
+      rrppId = created.id;
+      setRrpps(prev => [...prev, created as RrppRow]);
+    }
     const code = genCode('R', 8);
     const { error } = await supabase.from('event_rrpps').insert({
-      event_id: ev.id, rrpp_id: erForm.rrpp_id,
+      event_id: ev.id, rrpp_id: rrppId,
       max_tickets: erForm.max_tickets ? Number(erForm.max_tickets) : null,
       max_courtesies: Number(erForm.max_courtesies || 0),
       link_type: erForm.link_type, link_code: code, active: true,
     });
     if (error) return toast.error(error.message);
     toast.success('RRPP asignado');
-    setErForm({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
+    setErForm({ rrpp_name: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
     load();
   };
   const toggleEventRrpp = async (er: EventRrppRow) => {
