@@ -142,17 +142,25 @@ const PurchasePage = () => {
     });
     setProcessing(false);
     let payload: any = data;
-    if (error && (error as any).context?.json) {
-      try { payload = await (error as any).context.json(); } catch { /* ignore */ }
+    if (error && (error as any).context) {
+      const ctx = (error as any).context;
+      try { payload = await ctx.json(); }
+      catch {
+        try { const t = await ctx.text(); payload = { message: t }; } catch { /* ignore */ }
+      }
     }
     if (error || payload?.error) {
-      const msg = payload?.message || payload?.error || 'No se pudo iniciar el pago';
-      toast.error(msg);
-      console.error(error, payload);
+      const detail =
+        payload?.message ||
+        payload?.error ||
+        (error as any)?.message ||
+        'error desconocido';
+      toast.error(`No se pudo iniciar el pago: ${detail}`);
+      console.error('mp-create-preference failed', { error, payload });
       return;
     }
     if (!payload?.init_point) {
-      toast.error('No se pudo iniciar el pago');
+      toast.error('No se pudo iniciar el pago: respuesta sin init_point');
       return;
     }
     window.location.href = payload.init_point;
