@@ -94,7 +94,7 @@ const ScannerDashboard = () => {
     sessionStorage.removeItem('scanner_event_number');
     sessionStorage.removeItem('scanner_access_key');
     sessionStorage.removeItem('scanner_event_name');
-    navigate('/welcome');
+    navigate('/');
   };
 
   const statusColor = (s: string) => s === 'valid' ? 'bg-green-500 text-white'

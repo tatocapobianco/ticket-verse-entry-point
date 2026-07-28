@@ -31,7 +31,7 @@ export function ProtectedRoute({ children, requireRole, requireVerifiedEmail }: 
   }
 
   if (requireRole && !roles.includes(requireRole)) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

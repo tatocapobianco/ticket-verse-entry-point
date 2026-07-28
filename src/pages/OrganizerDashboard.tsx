@@ -123,7 +123,7 @@ const OrganizerDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate('/welcome')} className="rounded-full">Inicio</Button>
+            <Button variant="ghost" onClick={() => navigate('/')} className="rounded-full">Inicio</Button>
             <Button variant="ghost" onClick={async () => { await signOut(); navigate('/'); }} className="rounded-full">
               <LogOut className="h-4 w-4" />
             </Button>
