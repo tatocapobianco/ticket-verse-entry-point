@@ -141,7 +141,10 @@ const PurchasePage = () => {
       },
     });
     setProcessing(false);
-    const payload = data as any;
+    let payload: any = data;
+    if (error && (error as any).context?.json) {
+      try { payload = await (error as any).context.json(); } catch { /* ignore */ }
+    }
     if (error || payload?.error) {
       const msg = payload?.message || payload?.error || 'No se pudo iniciar el pago';
       toast.error(msg);
