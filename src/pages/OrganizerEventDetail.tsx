@@ -445,7 +445,12 @@ const OrganizerEventDetail = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                {tickets.length === 0 ? (
+                {ticketsError ? (
+                  <div className="p-4 rounded-xl bg-destructive/10 text-destructive text-sm">
+                    <p className="font-semibold">No se pudieron cargar los tickets</p>
+                    <p className="mt-1 text-xs opacity-90">{ticketsError}</p>
+                  </div>
+                ) : tickets.length === 0 ? (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground">Este evento no tiene tipos de entrada. ¡Agregá el primero!</p>
                   </div>
