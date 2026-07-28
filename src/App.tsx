@@ -13,6 +13,7 @@ import OrganizerOnboarding from "./pages/OrganizerOnboarding";
 import ScannerAccess from "./pages/ScannerAccess";
 import ScannerDashboard from "./pages/ScannerDashboard";
 import PurchasePage from "./pages/PurchasePage";
+import PurchaseResult from "./pages/PurchaseResult";
 import CourtesyClaimPage from "./pages/CourtesyClaimPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import NotFound from "./pages/NotFound";
@@ -62,6 +63,9 @@ const App = () => (
             } />
             <Route path="/purchase/:eventId/:ticketId" element={
               <ProtectedRoute requireVerifiedEmail><PurchasePage /></ProtectedRoute>
+            } />
+            <Route path="/purchase-result" element={
+              <ProtectedRoute><PurchaseResult /></ProtectedRoute>
             } />
 
             <Route path="*" element={<NotFound />} />

@@ -290,6 +290,51 @@ export type Database = {
           },
         ]
       }
+      stock_reservations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          quantity: number
+          status: string
+          ticket_type_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          quantity: number
+          status?: string
+          ticket_type_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          quantity?: number
+          status?: string
+          ticket_type_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_reservations_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_types_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_scans: {
         Row: {
           event_id: string
@@ -648,6 +693,24 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      release_expired_reservations: { Args: never; Returns: undefined }
+      reserve_stock: {
+        Args: { _quantity: number; _ticket_type_id: string }
+        Returns: {
+          expires_at: string
+          reservation_id: string
+        }[]
+      }
+      validate_and_scan_ticket: {
+        Args: { _access_key: string; _event_number: string; _qr_code: string }
+        Returns: {
+          attendee: string
+          event_name: string
+          result: string
+          ticket_id: string
+          ticket_type_name: string
+        }[]
       }
     }
     Enums: {
