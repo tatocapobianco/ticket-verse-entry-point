@@ -266,6 +266,18 @@ const Index = () => {
                 />
               </FieldWithIcon>
 
+              <FieldWithIcon icon={<Cake className="h-4 w-4" />} label="Fecha de nacimiento" id="birthDate">
+                <Input
+                  id="birthDate"
+                  type="date"
+                  max={new Date().toISOString().split('T')[0]}
+                  value={registerData.birthDate}
+                  onChange={(e) => setRegisterData({ ...registerData, birthDate: e.target.value })}
+                  className="h-12 rounded-2xl pl-10 bg-secondary/40 border-border"
+                />
+              </FieldWithIcon>
+
+
               <div className="grid grid-cols-1 gap-4">
                 <FieldWithIcon icon={<Lock className="h-4 w-4" />} label="Contraseña" id="registerPassword">
                   <Input
