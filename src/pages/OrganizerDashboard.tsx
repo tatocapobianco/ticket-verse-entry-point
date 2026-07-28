@@ -16,7 +16,7 @@ import cupoLogo from '@/assets/cupo-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
-import { RrppSection } from '@/components/RrppSection';
+
 
 type EventRow = {
   id: string; name: string; description: string | null;
@@ -147,7 +147,7 @@ const OrganizerDashboard = () => {
           </CardContent>
         </Card>
 
-        <RrppSection />
+
 
 
         <div className="flex items-center justify-between">

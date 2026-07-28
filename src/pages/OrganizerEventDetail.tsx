@@ -59,6 +59,7 @@ const OrganizerEventDetail = () => {
   const [loading, setLoading] = useState(true);
   const [ev, setEv] = useState<EventRow | null>(null);
   const [tickets, setTickets] = useState<TicketTypeRow[]>([]);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [links, setLinks] = useState<CourtesyLinkRow[]>([]);
   const [scannedByTicket, setScannedByTicket] = useState<Record<string, number>>({});
   const [courtesyByTicket, setCourtesyByTicket] = useState<Record<string, number>>({});
@@ -69,7 +70,7 @@ const OrganizerEventDetail = () => {
   const [rrpps, setRrpps] = useState<RrppRow[]>([]);
   const [eventRrpps, setEventRrpps] = useState<EventRrppRow[]>([]);
   const [rrppSalesByEventRrpp, setRrppSalesByEventRrpp] = useState<Record<string, number>>({});
-  const [erForm, setErForm] = useState({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' as 'general' | 'unique' });
+  const [erForm, setErForm] = useState({ rrpp_name: '', max_tickets: '', max_courtesies: '0', link_type: 'general' as 'general' | 'unique' });
 
   // ticket form
   const [ticketSheetOpen, setTicketSheetOpen] = useState(false);
@@ -112,16 +113,27 @@ const OrganizerEventDetail = () => {
       is_public: evd.is_public, status: evd.status,
     });
 
-    const [{ data: tts }, { data: cls }, { data: cts }, { data: scans }, { data: rr }, { data: er }] = await Promise.all([
-      supabase.from('ticket_types').select('*').eq('event_id', id).order('created_at'),
+    const ttRes = await supabase
+      .from('ticket_types')
+      .select('*')
+      .eq('event_id', id)
+      .order('created_at');
+    if (ttRes.error) {
+      setTicketsError(ttRes.error.message);
+      setTickets([]);
+    } else {
+      setTicketsError(null);
+      setTickets((ttRes.data ?? []) as TicketTypeRow[]);
+    }
+    const tt = (ttRes.data ?? []) as TicketTypeRow[];
+
+    const [{ data: cls }, { data: cts }, { data: scans }, { data: rr }, { data: er }] = await Promise.all([
       supabase.from('courtesy_links').select('*').eq('event_id', id).order('created_at', { ascending: false }),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('source', 'courtesy'),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('status', 'used'),
       supabase.from('rrpps').select('id, name, contact').eq('organizer_id', user.id).order('name'),
       supabase.from('event_rrpps').select('*').eq('event_id', id).order('created_at', { ascending: false }),
     ]);
-    const tt = (tts ?? []) as TicketTypeRow[];
-    setTickets(tt);
     setLinks((cls ?? []) as CourtesyLinkRow[]);
     setRrpps((rr ?? []) as RrppRow[]);
     setEventRrpps((er ?? []) as EventRrppRow[]);
@@ -257,18 +269,29 @@ const OrganizerEventDetail = () => {
   };
 
   const assignRrpp = async () => {
-    if (!ev) return;
-    if (!erForm.rrpp_id) return toast.error('Elegí un RRPP');
+    if (!ev || !user) return;
+    const name = erForm.rrpp_name.trim();
+    if (!name) return toast.error('Ingresá el nombre del RRPP');
+    // Find existing RRPP by name (case-insensitive) or create new one
+    let rrppId = rrpps.find(r => r.name.toLowerCase() === name.toLowerCase())?.id;
+    if (!rrppId) {
+      const { data: created, error: cErr } = await supabase
+        .from('rrpps').insert({ organizer_id: user.id, name })
+        .select('id, name, contact').single();
+      if (cErr || !created) return toast.error(cErr?.message ?? 'No se pudo crear el RRPP');
+      rrppId = created.id;
+      setRrpps(prev => [...prev, created as RrppRow]);
+    }
     const code = genCode('R', 8);
     const { error } = await supabase.from('event_rrpps').insert({
-      event_id: ev.id, rrpp_id: erForm.rrpp_id,
+      event_id: ev.id, rrpp_id: rrppId,
       max_tickets: erForm.max_tickets ? Number(erForm.max_tickets) : null,
       max_courtesies: Number(erForm.max_courtesies || 0),
       link_type: erForm.link_type, link_code: code, active: true,
     });
     if (error) return toast.error(error.message);
     toast.success('RRPP asignado');
-    setErForm({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
+    setErForm({ rrpp_name: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
     load();
   };
   const toggleEventRrpp = async (er: EventRrppRow) => {
@@ -422,7 +445,12 @@ const OrganizerEventDetail = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                {tickets.length === 0 ? (
+                {ticketsError ? (
+                  <div className="p-4 rounded-xl bg-destructive/10 text-destructive text-sm">
+                    <p className="font-semibold">No se pudieron cargar los tickets</p>
+                    <p className="mt-1 text-xs opacity-90">{ticketsError}</p>
+                  </div>
+                ) : tickets.length === 0 ? (
                   <div className="text-center py-10">
                     <p className="text-muted-foreground">Este evento no tiene tipos de entrada. ¡Agregá el primero!</p>
                   </div>
@@ -579,51 +607,50 @@ const OrganizerEventDetail = () => {
                 <CardDescription>Asigná RRPPs con cupo, tipo de link y activá/desactivá.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {rrpps.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Todavía no tenés RRPPs cargados. Creá uno desde el panel del organizador.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
-                    <div className="md:col-span-2">
-                      <Label>RRPP</Label>
-                      <select
-                        value={erForm.rrpp_id}
-                        onChange={(e) => setErForm({ ...erForm, rrpp_id: e.target.value })}
-                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
-                      >
-                        <option value="">Elegí un RRPP</option>
-                        {rrpps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <Label>Cupo tickets</Label>
-                      <Input type="number" min="0" placeholder="∞" value={erForm.max_tickets}
-                        onChange={(e) => setErForm({ ...erForm, max_tickets: e.target.value })} className="rounded-2xl" />
-                    </div>
-                    <div>
-                      <Label>Cortesías</Label>
-                      <Input type="number" min="0" value={erForm.max_courtesies}
-                        onChange={(e) => setErForm({ ...erForm, max_courtesies: e.target.value })} className="rounded-2xl" />
-                    </div>
-                    <div>
-                      <Label>Tipo de link</Label>
-                      <select
-                        value={erForm.link_type}
-                        onChange={(e) => setErForm({ ...erForm, link_type: e.target.value as 'general' | 'unique' })}
-                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
-                      >
-                        <option value="general">General</option>
-                        <option value="unique">Único</option>
-                      </select>
-                    </div>
-                    <div className="md:col-span-5">
-                      <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
-                        <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
-                      </Button>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+                  <div className="md:col-span-2">
+                    <Label>RRPP</Label>
+                    <Input
+                      list="rrpp-suggestions"
+                      value={erForm.rrpp_name}
+                      onChange={(e) => setErForm({ ...erForm, rrpp_name: e.target.value })}
+                      placeholder="Nombre del RRPP"
+                      className="rounded-2xl"
+                    />
+                    <datalist id="rrpp-suggestions">
+                      {rrpps.map(r => <option key={r.id} value={r.name} />)}
+                    </datalist>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Elegí uno existente o escribí un nombre nuevo para crearlo.
+                    </p>
                   </div>
-                )}
+                  <div>
+                    <Label>Cupo tickets</Label>
+                    <Input type="number" min="0" placeholder="∞" value={erForm.max_tickets}
+                      onChange={(e) => setErForm({ ...erForm, max_tickets: e.target.value })} className="rounded-2xl" />
+                  </div>
+                  <div>
+                    <Label>Cortesías</Label>
+                    <Input type="number" min="0" value={erForm.max_courtesies}
+                      onChange={(e) => setErForm({ ...erForm, max_courtesies: e.target.value })} className="rounded-2xl" />
+                  </div>
+                  <div>
+                    <Label>Tipo de link</Label>
+                    <select
+                      value={erForm.link_type}
+                      onChange={(e) => setErForm({ ...erForm, link_type: e.target.value as 'general' | 'unique' })}
+                      className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
+                    >
+                      <option value="general">General</option>
+                      <option value="unique">Único</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-5">
+                    <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
+                      <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
+                    </Button>
+                  </div>
+                </div>
 
                 {eventRrpps.length === 0 ? (
                   <div className="text-center py-8 text-sm text-muted-foreground">
