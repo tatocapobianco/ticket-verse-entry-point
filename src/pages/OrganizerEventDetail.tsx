@@ -368,12 +368,13 @@ const OrganizerEventDetail = () => {
         </Card>
 
         <Tabs defaultValue="tickets" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 rounded-2xl">
-            <TabsTrigger value="tickets" className="rounded-2xl"><Ticket className="h-4 w-4 mr-1" />Tickets</TabsTrigger>
-            <TabsTrigger value="courtesy" className="rounded-2xl"><Gift className="h-4 w-4 mr-1" />Cortesías</TabsTrigger>
-            <TabsTrigger value="links" className="rounded-2xl"><LinkIcon className="h-4 w-4 mr-1" />Links únicos</TabsTrigger>
-            <TabsTrigger value="stats" className="rounded-2xl"><BarChart3 className="h-4 w-4 mr-1" />Estadísticas</TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-2xl"><Settings className="h-4 w-4 mr-1" />Configuración</TabsTrigger>
+          <TabsList className="w-full flex overflow-x-auto whitespace-nowrap rounded-2xl h-auto justify-start">
+            <TabsTrigger value="tickets" className="rounded-2xl shrink-0"><Ticket className="h-4 w-4 mr-1" />Tickets</TabsTrigger>
+            <TabsTrigger value="courtesy" className="rounded-2xl shrink-0"><Gift className="h-4 w-4 mr-1" />Cortesías</TabsTrigger>
+            <TabsTrigger value="links" className="rounded-2xl shrink-0"><LinkIcon className="h-4 w-4 mr-1" />Links únicos</TabsTrigger>
+            <TabsTrigger value="rrpps" className="rounded-2xl shrink-0"><Megaphone className="h-4 w-4 mr-1" />RRPPs</TabsTrigger>
+            <TabsTrigger value="stats" className="rounded-2xl shrink-0"><BarChart3 className="h-4 w-4 mr-1" />Estadísticas</TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-2xl shrink-0"><Settings className="h-4 w-4 mr-1" />Configuración</TabsTrigger>
           </TabsList>
 
           {/* TICKETS */}
@@ -390,11 +391,8 @@ const OrganizerEventDetail = () => {
               </CardHeader>
               <CardContent>
                 {tickets.length === 0 ? (
-                  <div className="text-center py-10 space-y-3">
+                  <div className="text-center py-10">
                     <p className="text-muted-foreground">Este evento no tiene tipos de entrada. ¡Agregá el primero!</p>
-                    <Button onClick={() => openTicketSheet()} className="rounded-full brand-gradient-bg text-primary-foreground">
-                      <Plus className="h-4 w-4 mr-1" /> Agregar ticket
-                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">
