@@ -19,6 +19,8 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 import MercadoPagoCallback from "./pages/MercadoPagoCallback";
+import PublicEventsPage from "./pages/PublicEventsPage";
+import PublicEventPage from "./pages/PublicEventPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ const App = () => (
           <Routes>
             {/* Public */}
             <Route path="/" element={<Index />} />
+            <Route path="/eventos" element={<PublicEventsPage />} />
+            <Route path="/evento/:id" element={<PublicEventPage />} />
             <Route path="/cortesia/:courtesyCode" element={<CourtesyClaimPage />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/auth/mercadopago/callback" element={
