@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar, MapPin, Ticket, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
+import { Search, Calendar, MapPin, Ticket, QrCode, ArrowLeft, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import cupoLogo from '@/assets/cupo-logo.png';
@@ -273,17 +273,21 @@ const BuyerDashboard = () => {
                           <div className="font-mono text-sm break-all">
                             {revealed ? ticket.qr_code : '••••••••••••'}
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleQR(ticket.id)}
-                            className="mt-2"
-                            disabled={used}
-                          >
-                            {used ? 'Ticket Usado' : revealed ? 'Ocultar' : 'Ver QR'}
-                          </Button>
+                          <div className="flex gap-2 justify-center mt-2">
+                            <Button size="sm" variant="outline" onClick={() => toggleQR(ticket.id)} disabled={used}>
+                              {used ? 'Ticket Usado' : revealed ? 'Ocultar' : 'Ver QR'}
+                            </Button>
+                            <Button size="sm" variant="outline" disabled={used}
+                              onClick={async () => {
+                                const { error } = await supabase.functions.invoke('send-ticket-qr', { body: { ticket_id: ticket.id } });
+                                if (error) toast.error('No se pudo enviar el mail');
+                                else toast.success('QR enviado a tu mail');
+                              }}>
+                              <Mail className="h-4 w-4 mr-1" /> Enviar por mail
+                            </Button>
+                          </div>
                           <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Este QR es único e intransferible. Solo disponible en la app.
+                            ⚠️ Este QR es único e intransferible. Presentarlo desde la app es más seguro.
                           </p>
                         </div>
                       </CardContent>
