@@ -743,6 +743,10 @@ export type Database = {
           reservation_id: string
         }[]
       }
+      self_assign_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: undefined
+      }
       validate_and_scan_ticket: {
         Args: { _access_key: string; _event_number: string; _qr_code: string }
         Returns: {
