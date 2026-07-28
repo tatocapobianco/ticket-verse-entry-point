@@ -23,6 +23,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean
+          label: string | null
           max_uses: number
           ticket_type_id: string
           updated_at: string
@@ -36,6 +37,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          label?: string | null
           max_uses?: number
           ticket_type_id: string
           updated_at?: string
@@ -49,6 +51,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          label?: string | null
           max_uses?: number
           ticket_type_id?: string
           updated_at?: string
