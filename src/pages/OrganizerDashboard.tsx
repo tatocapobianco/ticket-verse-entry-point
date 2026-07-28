@@ -133,23 +133,21 @@ const OrganizerDashboard = () => {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <Card className="glass-card border-border/60 rounded-2xl">
-          <CardContent className="p-5 flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${mpConnected ? 'bg-green-500/10 text-green-600' : 'bg-primary/10 text-primary'}`}>
-                {mpConnected ? <CheckCircle2 className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}
-              </div>
-              <div>
-                <p className="font-semibold">MercadoPago</p>
-                <p className="text-xs text-muted-foreground">
-                  {mpConnected ? 'Conectado — vas a recibir los pagos en tu cuenta' : 'Opcional: conectá tu cuenta para recibir pagos.'}
-                </p>
-              </div>
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-primary/10 text-primary">
+              <Wallet className="h-5 w-5" />
             </div>
-            <Button onClick={handleConnectMP} variant={mpConnected ? 'outline' : 'default'} className={`rounded-full ${mpConnected ? '' : 'brand-gradient-bg text-primary-foreground'}`}>
-              {mpConnected ? 'Reconectar' : 'Conectar MercadoPago'}
-            </Button>
+            <div>
+              <p className="font-semibold">MercadoPago</p>
+              <p className="text-xs text-muted-foreground">
+                La conexión directa con tu cuenta de MercadoPago estará disponible próximamente. Los pagos ya funcionan a través de la cuenta de Cupo.
+              </p>
+            </div>
           </CardContent>
         </Card>
+
+        <RrppSection />
+
 
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-display font-bold">Mis eventos</h2>
