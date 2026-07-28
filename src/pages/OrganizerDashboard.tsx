@@ -485,7 +485,7 @@ const OrganizerDashboard = () => {
                     return (
                       <div key={l.id} className="p-3 rounded-xl bg-secondary/30 flex items-center justify-between gap-3 flex-wrap">
                         <div>
-                          <p className="text-sm font-medium">{t?.name || 'Ticket'} — {l.uses_count}/{l.max_uses} usos</p>
+                          <p className="text-sm font-medium">{l.label ? `${l.label} · ` : ''}{t?.name || 'Ticket'} — {l.uses_count}/{l.max_uses} usos</p>
                           <p className="text-xs text-muted-foreground font-mono">/cortesia/{l.code}</p>
                         </div>
                         <div className="flex items-center gap-1">
