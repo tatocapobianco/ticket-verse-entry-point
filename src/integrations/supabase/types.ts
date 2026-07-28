@@ -88,6 +88,64 @@ export type Database = {
           },
         ]
       }
+      event_rrpps: {
+        Row: {
+          active: boolean
+          created_at: string
+          event_id: string
+          id: string
+          link_code: string
+          link_type: string
+          max_courtesies: number
+          max_tickets: number | null
+          rrpp_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          event_id: string
+          id?: string
+          link_code?: string
+          link_type?: string
+          max_courtesies?: number
+          max_tickets?: number | null
+          rrpp_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          event_id?: string
+          id?: string
+          link_code?: string
+          link_type?: string
+          max_courtesies?: number
+          max_tickets?: number | null
+          rrpp_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rrpps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rrpps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rrpps_rrpp_id_fkey"
+            columns: ["rrpp_id"]
+            isOneToOne: false
+            referencedRelation: "rrpps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           access_key: string
@@ -316,6 +374,74 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rrpp_sales: {
+        Row: {
+          created_at: string
+          event_rrpp_id: string
+          id: string
+          purchase_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_rrpp_id: string
+          id?: string
+          purchase_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_rrpp_id?: string
+          id?: string
+          purchase_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rrpp_sales_event_rrpp_id_fkey"
+            columns: ["event_rrpp_id"]
+            isOneToOne: false
+            referencedRelation: "event_rrpps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rrpp_sales_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rrpps: {
+        Row: {
+          contact: string | null
+          created_at: string
+          id: string
+          name: string
+          organizer_id: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          organizer_id: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          organizer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rrpps_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
