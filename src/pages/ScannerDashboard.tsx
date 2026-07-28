@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Html5Qrcode } from 'html5-qrcode';
+import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { QrCode, CheckCircle, XCircle, Clock, Camera, Search, LogOut, CameraOff } from 'lucide-react';
+import { QrCode, CheckCircle, XCircle, Clock, Camera, Search, LogOut, CameraOff, SwitchCamera } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import cupoLogo from '@/assets/cupo-logo.png';
@@ -32,7 +32,9 @@ const ScannerDashboard = () => {
   const [manualCode, setManualCode] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [cameraOn, setCameraOn] = useState(false);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
   const lastScanRef = useRef<{ code: string; ts: number }>({ code: '', ts: 0 });
 
   useEffect(() => {
@@ -41,13 +43,12 @@ const ScannerDashboard = () => {
     if (!en || !ak) { navigate('/scanner-access'); return; }
     setEventNumber(en); setAccessKey(ak);
     setEventName(sessionStorage.getItem('scanner_event_name') || '');
-    return () => { scannerRef.current?.stop().catch(() => {}); };
+    return () => { controlsRef.current?.stop(); };
   }, [navigate]);
 
   const doScan = async (code: string) => {
     const trimmed = code.trim();
     if (!trimmed) return;
-    // Dedup rapid re-scans of same QR
     if (lastScanRef.current.code === trimmed && Date.now() - lastScanRef.current.ts < 3000) return;
     lastScanRef.current = { code: trimmed, ts: Date.now() };
 
@@ -61,22 +62,30 @@ const ScannerDashboard = () => {
     if (row.result === 'valid') toast.success('Válido'); else toast.error(messages[row.result] || 'Inválido');
   };
 
-  const startCamera = async () => {
+  const startCamera = async (mode: 'environment' | 'user' = facingMode) => {
     try {
-      const q = new Html5Qrcode('qr-reader');
-      scannerRef.current = q;
-      await q.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 },
-        (decoded) => doScan(decoded), () => {});
+      controlsRef.current?.stop();
+      const reader = new BrowserMultiFormatReader();
+      const constraints: MediaStreamConstraints = { video: { facingMode: { ideal: mode } } };
+      const controls = await reader.decodeFromConstraints(constraints, videoRef.current!, (result) => {
+        if (result) doScan(result.getText());
+      });
+      controlsRef.current = controls;
       setCameraOn(true);
+      setFacingMode(mode);
     } catch (e: any) {
       toast.error('No se pudo iniciar la cámara');
       console.error(e);
     }
   };
-  const stopCamera = async () => {
-    await scannerRef.current?.stop().catch(() => {});
-    scannerRef.current = null;
+  const stopCamera = () => {
+    controlsRef.current?.stop();
+    controlsRef.current = null;
     setCameraOn(false);
+  };
+  const switchCamera = async () => {
+    const next = facingMode === 'environment' ? 'user' : 'environment';
+    await startCamera(next);
   };
 
   const handleManual = () => { if (manualCode.trim()) { doScan(manualCode.trim()); setManualCode(''); } };
@@ -113,9 +122,14 @@ const ScannerDashboard = () => {
           <Card className="rounded-3xl soft-shadow">
             <CardHeader><CardTitle className="flex items-center font-display"><QrCode className="h-5 w-5 mr-2 text-primary" />Escanear ticket</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div id="qr-reader" className={cameraOn ? 'rounded-2xl overflow-hidden' : 'hidden'} />
+              <div className={cameraOn ? 'relative rounded-2xl overflow-hidden bg-black' : 'hidden'}>
+                <video ref={videoRef} className="w-full aspect-square object-cover" muted playsInline />
+                <Button onClick={switchCamera} size="sm" variant="secondary" className="absolute top-2 right-2 rounded-full">
+                  <SwitchCamera className="h-4 w-4" />
+                </Button>
+              </div>
               {!cameraOn ? (
-                <Button onClick={startCamera} className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground">
+                <Button onClick={() => startCamera()} className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground">
                   <Camera className="h-5 w-5 mr-2" /> Escanear con cámara
                 </Button>
               ) : (
