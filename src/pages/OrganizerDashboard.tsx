@@ -167,6 +167,7 @@ const OrganizerDashboard = () => {
     const { error } = await supabase.from('courtesy_links').insert({
       event_id: panelEvent.id, ticket_type_id: newCourtesy.ticket_type_id,
       code, max_uses: qty, created_by: user.id, is_active: true,
+      label: newCourtesy.label.trim() || null,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
