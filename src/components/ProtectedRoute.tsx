@@ -23,7 +23,7 @@ export function ProtectedRoute({ children, requireRole, requireVerifiedEmail }: 
 
   if (!session) {
     const next = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/?next=${next}`} replace />;
+    return <Navigate to={`/login?next=${next}`} replace />;
   }
 
   if (requireVerifiedEmail && !emailVerified) {

@@ -109,7 +109,7 @@ const Index = () => {
   };
 
   const handleGoogleAuth = async () => {
-    const redirectPath = nextPath ? `/?next=${encodeURIComponent(nextPath)}` : '/';
+    const redirectPath = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/';
     const result = await lovable.auth.signInWithOAuth('google', {
       redirect_uri: window.location.origin + redirectPath,
     });
