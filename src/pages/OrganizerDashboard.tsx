@@ -27,6 +27,7 @@ type TicketTypeRow = {
 type CourtesyLinkRow = {
   id: string; event_id: string; ticket_type_id: string; code: string;
   max_uses: number; uses_count: number; is_active: boolean; expires_at: string | null;
+  label: string | null;
 };
 
 const genCode = (prefix = '', len = 6) => prefix + Math.random().toString(36).slice(2, 2 + len).toUpperCase();
