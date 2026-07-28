@@ -13,7 +13,7 @@ const VerifyEmailPage = () => {
   const [sending, setSending] = useState(false);
 
   if (emailVerified) {
-    navigate('/welcome', { replace: true });
+    navigate('/', { replace: true });
     return null;
   }
 
@@ -23,7 +23,7 @@ const VerifyEmailPage = () => {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: user.email,
-      options: { emailRedirectTo: window.location.origin + '/welcome' },
+      options: { emailRedirectTo: window.location.origin + '/' },
     });
     setSending(false);
     if (error) toast.error(error.message);

@@ -18,6 +18,7 @@ import {
 import {
   ArrowLeft, Plus, Ticket, Gift, Link as LinkIcon, BarChart3, Settings,
   Loader2, Copy, Trash2, Eye, EyeOff, AlertTriangle, MapPin, Calendar,
+  Megaphone, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,12 @@ type CourtesyLinkRow = {
   max_uses: number; uses_count: number; is_active: boolean;
   label: string | null;
 };
+type RrppRow = { id: string; name: string; contact: string | null };
+type EventRrppRow = {
+  id: string; event_id: string; rrpp_id: string;
+  max_tickets: number | null; max_courtesies: number;
+  link_type: 'general' | 'unique'; link_code: string; active: boolean;
+};
 
 const genCode = (prefix = '', len = 6) =>
   prefix + Math.random().toString(36).slice(2, 2 + len).toUpperCase();
@@ -57,6 +64,12 @@ const OrganizerEventDetail = () => {
   const [courtesyByTicket, setCourtesyByTicket] = useState<Record<string, number>>({});
   const [revenueTotal, setRevenueTotal] = useState(0);
   const [showKey, setShowKey] = useState(false);
+
+  // rrpps
+  const [rrpps, setRrpps] = useState<RrppRow[]>([]);
+  const [eventRrpps, setEventRrpps] = useState<EventRrppRow[]>([]);
+  const [rrppSalesByEventRrpp, setRrppSalesByEventRrpp] = useState<Record<string, number>>({});
+  const [erForm, setErForm] = useState({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' as 'general' | 'unique' });
 
   // ticket form
   const [ticketSheetOpen, setTicketSheetOpen] = useState(false);
@@ -99,15 +112,19 @@ const OrganizerEventDetail = () => {
       is_public: evd.is_public, status: evd.status,
     });
 
-    const [{ data: tts }, { data: cls }, { data: cts }, { data: scans }] = await Promise.all([
+    const [{ data: tts }, { data: cls }, { data: cts }, { data: scans }, { data: rr }, { data: er }] = await Promise.all([
       supabase.from('ticket_types').select('*').eq('event_id', id).order('created_at'),
       supabase.from('courtesy_links').select('*').eq('event_id', id).order('created_at', { ascending: false }),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('source', 'courtesy'),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('status', 'used'),
+      supabase.from('rrpps').select('id, name, contact').eq('organizer_id', user.id).order('name'),
+      supabase.from('event_rrpps').select('*').eq('event_id', id).order('created_at', { ascending: false }),
     ]);
     const tt = (tts ?? []) as TicketTypeRow[];
     setTickets(tt);
     setLinks((cls ?? []) as CourtesyLinkRow[]);
+    setRrpps((rr ?? []) as RrppRow[]);
+    setEventRrpps((er ?? []) as EventRrppRow[]);
     const c: Record<string, number> = {};
     (cts ?? []).forEach((r: any) => { c[r.ticket_type_id] = (c[r.ticket_type_id] || 0) + 1; });
     setCourtesyByTicket(c);
@@ -115,6 +132,16 @@ const OrganizerEventDetail = () => {
     (scans ?? []).forEach((r: any) => { s[r.ticket_type_id] = (s[r.ticket_type_id] || 0) + 1; });
     setScannedByTicket(s);
     setRevenueTotal(tt.reduce((a, t) => a + t.quantity_sold * Number(t.price), 0));
+    // rrpp sales count per event_rrpp
+    const erIds = (er ?? []).map((x: any) => x.id);
+    if (erIds.length) {
+      const { data: sales } = await supabase.from('rrpp_sales').select('event_rrpp_id').in('event_rrpp_id', erIds);
+      const rs: Record<string, number> = {};
+      (sales ?? []).forEach((r: any) => { rs[r.event_rrpp_id] = (rs[r.event_rrpp_id] || 0) + 1; });
+      setRrppSalesByEventRrpp(rs);
+    } else {
+      setRrppSalesByEventRrpp({});
+    }
     setLoading(false);
   };
 
@@ -155,11 +182,19 @@ const OrganizerEventDetail = () => {
       authorization_code: code || null,
       requires_auth_code: !!code,
     };
-    const { error } = editingTicket
-      ? await supabase.from('ticket_types').update(payload).eq('id', editingTicket.id)
-      : await supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' });
+    const query = editingTicket
+      ? supabase.from('ticket_types').update(payload).eq('id', editingTicket.id).select('*').single()
+      : supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' }).select('*').single();
+    const { data: saved, error } = await query;
     setSaving(false);
     if (error) return toast.error(error.message);
+    // Optimistically update local state so the new/edited ticket appears immediately
+    if (saved) {
+      const row = saved as TicketTypeRow;
+      setTickets(prev => editingTicket
+        ? prev.map(t => t.id === row.id ? row : t)
+        : [...prev, row]);
+    }
     toast.success(editingTicket ? 'Ticket actualizado' : 'Ticket creado');
     setTicketSheetOpen(false);
     load();
@@ -219,6 +254,38 @@ const OrganizerEventDetail = () => {
     toast.success('Link creado — copiado');
     setLForm({ ticket_type_id: '', max_uses: '10', label: '' });
     load();
+  };
+
+  const assignRrpp = async () => {
+    if (!ev) return;
+    if (!erForm.rrpp_id) return toast.error('Elegí un RRPP');
+    const code = genCode('R', 8);
+    const { error } = await supabase.from('event_rrpps').insert({
+      event_id: ev.id, rrpp_id: erForm.rrpp_id,
+      max_tickets: erForm.max_tickets ? Number(erForm.max_tickets) : null,
+      max_courtesies: Number(erForm.max_courtesies || 0),
+      link_type: erForm.link_type, link_code: code, active: true,
+    });
+    if (error) return toast.error(error.message);
+    toast.success('RRPP asignado');
+    setErForm({ rrpp_id: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
+    load();
+  };
+  const toggleEventRrpp = async (er: EventRrppRow) => {
+    const { error } = await supabase.from('event_rrpps').update({ active: !er.active }).eq('id', er.id);
+    if (error) return toast.error(error.message);
+    load();
+  };
+  const removeEventRrpp = async (er: EventRrppRow) => {
+    const { error } = await supabase.from('event_rrpps').delete().eq('id', er.id);
+    if (error) return toast.error(error.message);
+    toast.success('RRPP removido');
+    load();
+  };
+  const copyRrppLink = async (er: EventRrppRow) => {
+    const url = `${window.location.origin}/rrpp/${er.link_code}`;
+    await navigator.clipboard.writeText(url);
+    toast.success('Link copiado');
   };
 
   const revoke = async (linkId: string) => {
@@ -333,12 +400,13 @@ const OrganizerEventDetail = () => {
         </Card>
 
         <Tabs defaultValue="tickets" className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 rounded-2xl">
-            <TabsTrigger value="tickets" className="rounded-2xl"><Ticket className="h-4 w-4 mr-1" />Tickets</TabsTrigger>
-            <TabsTrigger value="courtesy" className="rounded-2xl"><Gift className="h-4 w-4 mr-1" />Cortesías</TabsTrigger>
-            <TabsTrigger value="links" className="rounded-2xl"><LinkIcon className="h-4 w-4 mr-1" />Links únicos</TabsTrigger>
-            <TabsTrigger value="stats" className="rounded-2xl"><BarChart3 className="h-4 w-4 mr-1" />Estadísticas</TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-2xl"><Settings className="h-4 w-4 mr-1" />Configuración</TabsTrigger>
+          <TabsList className="w-full flex overflow-x-auto whitespace-nowrap rounded-2xl h-auto justify-start">
+            <TabsTrigger value="tickets" className="rounded-2xl shrink-0"><Ticket className="h-4 w-4 mr-1" />Tickets</TabsTrigger>
+            <TabsTrigger value="courtesy" className="rounded-2xl shrink-0"><Gift className="h-4 w-4 mr-1" />Cortesías</TabsTrigger>
+            <TabsTrigger value="links" className="rounded-2xl shrink-0"><LinkIcon className="h-4 w-4 mr-1" />Links únicos</TabsTrigger>
+            <TabsTrigger value="rrpps" className="rounded-2xl shrink-0"><Megaphone className="h-4 w-4 mr-1" />RRPPs</TabsTrigger>
+            <TabsTrigger value="stats" className="rounded-2xl shrink-0"><BarChart3 className="h-4 w-4 mr-1" />Estadísticas</TabsTrigger>
+            <TabsTrigger value="settings" className="rounded-2xl shrink-0"><Settings className="h-4 w-4 mr-1" />Configuración</TabsTrigger>
           </TabsList>
 
           {/* TICKETS */}
@@ -355,11 +423,8 @@ const OrganizerEventDetail = () => {
               </CardHeader>
               <CardContent>
                 {tickets.length === 0 ? (
-                  <div className="text-center py-10 space-y-3">
+                  <div className="text-center py-10">
                     <p className="text-muted-foreground">Este evento no tiene tipos de entrada. ¡Agregá el primero!</p>
-                    <Button onClick={() => openTicketSheet()} className="rounded-full brand-gradient-bg text-primary-foreground">
-                      <Plus className="h-4 w-4 mr-1" /> Agregar ticket
-                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -505,6 +570,100 @@ const OrganizerEventDetail = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* RRPPs */}
+          <TabsContent value="rrpps" className="mt-4">
+            <Card className="glass-card rounded-2xl">
+              <CardHeader>
+                <CardTitle className="font-display">RRPPs del evento</CardTitle>
+                <CardDescription>Asigná RRPPs con cupo, tipo de link y activá/desactivá.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {rrpps.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Todavía no tenés RRPPs cargados. Creá uno desde el panel del organizador.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+                    <div className="md:col-span-2">
+                      <Label>RRPP</Label>
+                      <select
+                        value={erForm.rrpp_id}
+                        onChange={(e) => setErForm({ ...erForm, rrpp_id: e.target.value })}
+                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
+                      >
+                        <option value="">Elegí un RRPP</option>
+                        {rrpps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Cupo tickets</Label>
+                      <Input type="number" min="0" placeholder="∞" value={erForm.max_tickets}
+                        onChange={(e) => setErForm({ ...erForm, max_tickets: e.target.value })} className="rounded-2xl" />
+                    </div>
+                    <div>
+                      <Label>Cortesías</Label>
+                      <Input type="number" min="0" value={erForm.max_courtesies}
+                        onChange={(e) => setErForm({ ...erForm, max_courtesies: e.target.value })} className="rounded-2xl" />
+                    </div>
+                    <div>
+                      <Label>Tipo de link</Label>
+                      <select
+                        value={erForm.link_type}
+                        onChange={(e) => setErForm({ ...erForm, link_type: e.target.value as 'general' | 'unique' })}
+                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
+                      >
+                        <option value="general">General</option>
+                        <option value="unique">Único</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-5">
+                      <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
+                        <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {eventRrpps.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    No hay RRPPs asignados a este evento.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {eventRrpps.map((er) => {
+                      const rrpp = rrpps.find(r => r.id === er.rrpp_id);
+                      const sold = rrppSalesByEventRrpp[er.id] || 0;
+                      return (
+                        <div key={er.id} className="p-3 rounded-xl bg-secondary/30 flex flex-wrap items-center gap-3">
+                          <div className="flex-1 min-w-[180px]">
+                            <p className="font-medium">{rrpp?.name ?? 'RRPP'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Vendidas {sold}{er.max_tickets ? ` / ${er.max_tickets}` : ''} · Cortesías {er.max_courtesies} · {er.link_type === 'unique' ? 'Único' : 'General'}
+                            </p>
+                          </div>
+                          <Badge variant={er.active ? 'default' : 'secondary'}>
+                            {er.active ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                          <Button size="sm" variant="outline" className="rounded-full" onClick={() => copyRrppLink(er)}>
+                            <Copy className="h-3.5 w-3.5 mr-1" /> Link
+                          </Button>
+                          <Button size="sm" variant="outline" className="rounded-full" onClick={() => toggleEventRrpp(er)}>
+                            {er.active ? 'Desactivar' : 'Activar'}
+                          </Button>
+                          <Button size="sm" variant="ghost" className="rounded-full text-destructive" onClick={() => removeEventRrpp(er)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
 
           {/* STATS */}
           <TabsContent value="stats" className="mt-4">

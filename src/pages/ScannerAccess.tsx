@@ -38,7 +38,7 @@ const ScannerAccess = () => {
       <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-20 w-[28rem] h-[28rem] rounded-full bg-accent/15 blur-3xl" />
       <div className="w-full max-w-md relative z-10">
-        <Button variant="ghost" onClick={() => navigate('/welcome')} className="mb-4 rounded-full">
+        <Button variant="ghost" onClick={() => navigate('/')} className="mb-4 rounded-full">
           <ArrowLeft className="h-4 w-4 mr-2" /> Volver
         </Button>
         <div className="text-center mb-6">

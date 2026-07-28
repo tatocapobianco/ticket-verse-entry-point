@@ -117,7 +117,7 @@ const BuyerDashboard = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/welcome')} className="rounded-full shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="rounded-full shrink-0">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <img src={cupoLogo} alt="Cupo" className="h-8 w-auto" />

@@ -94,7 +94,7 @@ const PublicEventPage = () => {
               const handleBuy = () => {
                 const path = `/purchase/${event.id}/${t.id}`;
                 if (!user) {
-                  navigate(`/?next=${encodeURIComponent(path)}`);
+                  navigate(`/login?next=${encodeURIComponent(path)}`);
                   return;
                 }
                 navigate(path);

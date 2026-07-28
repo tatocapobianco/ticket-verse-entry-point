@@ -66,7 +66,7 @@ const OrganizerOnboarding = () => {
       <div className="relative z-10 max-w-2xl mx-auto">
         <header className="flex items-center justify-between mb-10">
           <img src={cupoLogo} alt="Cupo" className="h-10 w-auto" />
-          <Button variant="ghost" onClick={() => navigate('/welcome')} className="rounded-full">
+          <Button variant="ghost" onClick={() => navigate('/')} className="rounded-full">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>

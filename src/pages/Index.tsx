@@ -36,10 +36,10 @@ const Index = () => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
-      if (data.session) navigate(nextPath ?? '/welcome', { replace: true });
+      if (data.session) navigate(nextPath ?? '/', { replace: true });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate(nextPath ?? '/welcome', { replace: true });
+      if (session) navigate(nextPath ?? '/', { replace: true });
     });
     return () => {
       mounted = false;
@@ -76,7 +76,7 @@ const Index = () => {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success('¡Hola de nuevo! 👋');
-    navigate(nextPath ?? '/welcome', { replace: true });
+    navigate(nextPath ?? '/', { replace: true });
   };
 
   const handleRegister = async () => {
@@ -89,7 +89,7 @@ const Index = () => {
       return;
     }
     setLoading(true);
-    const emailRedirectTo = window.location.origin + (nextPath ?? '/welcome');
+    const emailRedirectTo = window.location.origin + (nextPath ?? '/');
     const { error } = await supabase.auth.signUp({
       email: registerData.email.trim(),
       password: registerData.password,
@@ -105,11 +105,11 @@ const Index = () => {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success('¡Cuenta creada! Revisá tu email si se pide confirmación.');
-    navigate(nextPath ?? '/welcome', { replace: true });
+    navigate(nextPath ?? '/', { replace: true });
   };
 
   const handleGoogleAuth = async () => {
-    const redirectPath = nextPath ? `/?next=${encodeURIComponent(nextPath)}` : '/';
+    const redirectPath = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/';
     const result = await lovable.auth.signInWithOAuth('google', {
       redirect_uri: window.location.origin + redirectPath,
     });

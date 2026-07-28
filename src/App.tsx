@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import WelcomePage from "./pages/WelcomePage";
+import HomePage from "./pages/HomePage";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerOnboarding from "./pages/OrganizerOnboarding";
@@ -19,9 +19,9 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 import MercadoPagoCallback from "./pages/MercadoPagoCallback";
-import PublicEventsPage from "./pages/PublicEventsPage";
 import PublicEventPage from "./pages/PublicEventPage";
 import OrganizerEventDetail from "./pages/OrganizerEventDetail";
+import RrppRedirectPage from "./pages/RrppRedirectPage";
 
 const queryClient = new QueryClient();
 
@@ -33,23 +33,20 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public */}
-            <Route path="/" element={<Index />} />
-            <Route path="/eventos" element={<PublicEventsPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/eventos" element={<HomePage />} />
             <Route path="/evento/:id" element={<PublicEventPage />} />
+            <Route path="/login" element={<Index />} />
             <Route path="/cortesia/:courtesyCode" element={<CourtesyClaimPage />} />
+            <Route path="/rrpp/:link_code" element={<RrppRedirectPage />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/auth/mercadopago/callback" element={
               <ProtectedRoute><MercadoPagoCallback /></ProtectedRoute>
             } />
 
-
-
             {/* Auth-required */}
             <Route path="/verify-email" element={
               <ProtectedRoute><VerifyEmailPage /></ProtectedRoute>
-            } />
-            <Route path="/welcome" element={
-              <ProtectedRoute><WelcomePage /></ProtectedRoute>
             } />
             <Route path="/buyer-dashboard" element={
               <ProtectedRoute><BuyerDashboard /></ProtectedRoute>

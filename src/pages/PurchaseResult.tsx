@@ -18,7 +18,18 @@ const PurchaseResult = () => {
       for (let i = 0; i < 8; i++) {
         const { data } = await supabase.from('purchases').select('status').eq('id', id).single();
         if (cancelled) return;
-        if (data?.status === 'paid') { setStatus('paid'); return; }
+        if (data?.status === 'paid') {
+          const erId = sessionStorage.getItem('rrpp_event_rrpp_id');
+          if (erId) {
+            try {
+              await supabase.from('rrpp_sales').insert({ event_rrpp_id: erId, purchase_id: id });
+            } catch {}
+            sessionStorage.removeItem('rrpp_event_rrpp_id');
+            sessionStorage.removeItem('rrpp_link_code');
+          }
+          setStatus('paid');
+          return;
+        }
         if (data?.status === 'rejected') { setStatus('rejected'); return; }
         await new Promise(r => setTimeout(r, 1500));
       }
