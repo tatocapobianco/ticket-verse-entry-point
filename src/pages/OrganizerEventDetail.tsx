@@ -602,44 +602,44 @@ const OrganizerEventDetail = () => {
                 <CardDescription>Asigná RRPPs con cupo, tipo de link y activá/desactivá.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {rrpps.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Todavía no tenés RRPPs cargados. Creá uno desde el panel del organizador.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
-                    <div className="md:col-span-2">
-                      <Label>RRPP</Label>
-                      <select
-                        value={erForm.rrpp_id}
-                        onChange={(e) => setErForm({ ...erForm, rrpp_id: e.target.value })}
-                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
-                      >
-                        <option value="">Elegí un RRPP</option>
-                        {rrpps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <Label>Cupo tickets</Label>
-                      <Input type="number" min="0" placeholder="∞" value={erForm.max_tickets}
-                        onChange={(e) => setErForm({ ...erForm, max_tickets: e.target.value })} className="rounded-2xl" />
-                    </div>
-                    <div>
-                      <Label>Cortesías</Label>
-                      <Input type="number" min="0" value={erForm.max_courtesies}
-                        onChange={(e) => setErForm({ ...erForm, max_courtesies: e.target.value })} className="rounded-2xl" />
-                    </div>
-                    <div>
-                      <Label>Tipo de link</Label>
-                      <select
-                        value={erForm.link_type}
-                        onChange={(e) => setErForm({ ...erForm, link_type: e.target.value as 'general' | 'unique' })}
-                        className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
-                      >
-                        <option value="general">General</option>
-                        <option value="unique">Único</option>
-                      </select>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+                  <div className="md:col-span-2">
+                    <Label>RRPP</Label>
+                    <Input
+                      list="rrpp-suggestions"
+                      value={erForm.rrpp_name}
+                      onChange={(e) => setErForm({ ...erForm, rrpp_name: e.target.value })}
+                      placeholder="Nombre del RRPP"
+                      className="rounded-2xl"
+                    />
+                    <datalist id="rrpp-suggestions">
+                      {rrpps.map(r => <option key={r.id} value={r.name} />)}
+                    </datalist>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Elegí uno existente o escribí un nombre nuevo para crearlo.
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Cupo tickets</Label>
+                    <Input type="number" min="0" placeholder="∞" value={erForm.max_tickets}
+                      onChange={(e) => setErForm({ ...erForm, max_tickets: e.target.value })} className="rounded-2xl" />
+                  </div>
+                  <div>
+                    <Label>Cortesías</Label>
+                    <Input type="number" min="0" value={erForm.max_courtesies}
+                      onChange={(e) => setErForm({ ...erForm, max_courtesies: e.target.value })} className="rounded-2xl" />
+                  </div>
+                  <div>
+                    <Label>Tipo de link</Label>
+                    <select
+                      value={erForm.link_type}
+                      onChange={(e) => setErForm({ ...erForm, link_type: e.target.value as 'general' | 'unique' })}
+                      className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm"
+                    >
+                      <option value="general">General</option>
+                      <option value="unique">Único</option>
+                    </select>
+                  </div>
                     <div className="md:col-span-5">
                       <Button onClick={assignRrpp} className="rounded-full brand-gradient-bg text-primary-foreground">
                         <Plus className="h-4 w-4 mr-1" /> Asignar RRPP
