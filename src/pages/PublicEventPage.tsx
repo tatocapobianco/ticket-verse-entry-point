@@ -4,12 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Loader2, AlertCircle, LogIn } from 'lucide-react';
 import cupoLogo from '@/assets/cupo-logo.png';
+import { useAuth } from '@/hooks/useAuth';
 
 const PublicEventPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<any>(null);
   const [tickets, setTickets] = useState<any[]>([]);
@@ -89,6 +91,14 @@ const PublicEventPage = () => {
               <p className="text-sm text-muted-foreground">No hay entradas a la venta.</p>
             ) : tickets.map((t) => {
               const sold = isSoldOut(t);
+              const handleBuy = () => {
+                const path = `/purchase/${event.id}/${t.id}`;
+                if (!user) {
+                  navigate(`/?next=${encodeURIComponent(path)}`);
+                  return;
+                }
+                navigate(path);
+              };
               return (
                 <div key={t.id} className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-secondary/40 flex-wrap">
                   <div>
@@ -98,8 +108,14 @@ const PublicEventPage = () => {
                   </div>
                   {sold ? (
                     <Button disabled variant="secondary" className="rounded-full">Agotado</Button>
+                  ) : authLoading ? (
+                    <Button disabled variant="secondary" className="rounded-full"><Loader2 className="h-4 w-4 animate-spin" /></Button>
+                  ) : !user ? (
+                    <Button onClick={handleBuy} variant="outline" className="rounded-full">
+                      <LogIn className="h-4 w-4 mr-2" /> Iniciar sesión para comprar
+                    </Button>
                   ) : (
-                    <Button onClick={() => navigate(`/purchase/${event.id}/${t.id}`)} className="rounded-full brand-gradient-bg text-primary-foreground">Comprar</Button>
+                    <Button onClick={handleBuy} className="rounded-full brand-gradient-bg text-primary-foreground">Comprar</Button>
                   )}
                 </div>
               );

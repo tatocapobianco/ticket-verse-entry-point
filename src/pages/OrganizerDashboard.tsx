@@ -27,6 +27,7 @@ type TicketTypeRow = {
 type CourtesyLinkRow = {
   id: string; event_id: string; ticket_type_id: string; code: string;
   max_uses: number; uses_count: number; is_active: boolean; expires_at: string | null;
+  label: string | null;
 };
 
 const genCode = (prefix = '', len = 6) => prefix + Math.random().toString(36).slice(2, 2 + len).toUpperCase();
@@ -166,6 +167,7 @@ const OrganizerDashboard = () => {
     const { error } = await supabase.from('courtesy_links').insert({
       event_id: panelEvent.id, ticket_type_id: newCourtesy.ticket_type_id,
       code, max_uses: qty, created_by: user.id, is_active: true,
+      label: newCourtesy.label.trim() || null,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -483,7 +485,7 @@ const OrganizerDashboard = () => {
                     return (
                       <div key={l.id} className="p-3 rounded-xl bg-secondary/30 flex items-center justify-between gap-3 flex-wrap">
                         <div>
-                          <p className="text-sm font-medium">{t?.name || 'Ticket'} — {l.uses_count}/{l.max_uses} usos</p>
+                          <p className="text-sm font-medium">{l.label ? `${l.label} · ` : ''}{t?.name || 'Ticket'} — {l.uses_count}/{l.max_uses} usos</p>
                           <p className="text-xs text-muted-foreground font-mono">/cortesia/{l.code}</p>
                         </div>
                         <div className="flex items-center gap-1">
