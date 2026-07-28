@@ -91,6 +91,14 @@ const PublicEventPage = () => {
               <p className="text-sm text-muted-foreground">No hay entradas a la venta.</p>
             ) : tickets.map((t) => {
               const sold = isSoldOut(t);
+              const handleBuy = () => {
+                if (!user) {
+                  sessionStorage.setItem('post_login_redirect', `/purchase/${event.id}/${t.id}`);
+                  navigate('/');
+                  return;
+                }
+                navigate(`/purchase/${event.id}/${t.id}`);
+              };
               return (
                 <div key={t.id} className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-secondary/40 flex-wrap">
                   <div>
@@ -100,8 +108,14 @@ const PublicEventPage = () => {
                   </div>
                   {sold ? (
                     <Button disabled variant="secondary" className="rounded-full">Agotado</Button>
+                  ) : authLoading ? (
+                    <Button disabled variant="secondary" className="rounded-full"><Loader2 className="h-4 w-4 animate-spin" /></Button>
+                  ) : !user ? (
+                    <Button onClick={handleBuy} variant="outline" className="rounded-full">
+                      <LogIn className="h-4 w-4 mr-2" /> Iniciar sesión para comprar
+                    </Button>
                   ) : (
-                    <Button onClick={() => navigate(`/purchase/${event.id}/${t.id}`)} className="rounded-full brand-gradient-bg text-primary-foreground">Comprar</Button>
+                    <Button onClick={handleBuy} className="rounded-full brand-gradient-bg text-primary-foreground">Comprar</Button>
                   )}
                 </div>
               );
