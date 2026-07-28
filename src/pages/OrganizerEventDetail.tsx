@@ -113,16 +113,27 @@ const OrganizerEventDetail = () => {
       is_public: evd.is_public, status: evd.status,
     });
 
-    const [{ data: tts }, { data: cls }, { data: cts }, { data: scans }, { data: rr }, { data: er }] = await Promise.all([
-      supabase.from('ticket_types').select('*').eq('event_id', id).order('created_at'),
+    const ttRes = await supabase
+      .from('ticket_types')
+      .select('*')
+      .eq('event_id', id)
+      .order('created_at');
+    if (ttRes.error) {
+      setTicketsError(ttRes.error.message);
+      setTickets([]);
+    } else {
+      setTicketsError(null);
+      setTickets((ttRes.data ?? []) as TicketTypeRow[]);
+    }
+    const tt = (ttRes.data ?? []) as TicketTypeRow[];
+
+    const [{ data: cls }, { data: cts }, { data: scans }, { data: rr }, { data: er }] = await Promise.all([
       supabase.from('courtesy_links').select('*').eq('event_id', id).order('created_at', { ascending: false }),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('source', 'courtesy'),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('status', 'used'),
       supabase.from('rrpps').select('id, name, contact').eq('organizer_id', user.id).order('name'),
       supabase.from('event_rrpps').select('*').eq('event_id', id).order('created_at', { ascending: false }),
     ]);
-    const tt = (tts ?? []) as TicketTypeRow[];
-    setTickets(tt);
     setLinks((cls ?? []) as CourtesyLinkRow[]);
     setRrpps((rr ?? []) as RrppRow[]);
     setEventRrpps((er ?? []) as EventRrppRow[]);
