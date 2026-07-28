@@ -112,15 +112,19 @@ const OrganizerEventDetail = () => {
       is_public: evd.is_public, status: evd.status,
     });
 
-    const [{ data: tts }, { data: cls }, { data: cts }, { data: scans }] = await Promise.all([
+    const [{ data: tts }, { data: cls }, { data: cts }, { data: scans }, { data: rr }, { data: er }] = await Promise.all([
       supabase.from('ticket_types').select('*').eq('event_id', id).order('created_at'),
       supabase.from('courtesy_links').select('*').eq('event_id', id).order('created_at', { ascending: false }),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('source', 'courtesy'),
       supabase.from('tickets').select('ticket_type_id').eq('event_id', id).eq('status', 'used'),
+      supabase.from('rrpps').select('id, name, contact').eq('organizer_id', user.id).order('name'),
+      supabase.from('event_rrpps').select('*').eq('event_id', id).order('created_at', { ascending: false }),
     ]);
     const tt = (tts ?? []) as TicketTypeRow[];
     setTickets(tt);
     setLinks((cls ?? []) as CourtesyLinkRow[]);
+    setRrpps((rr ?? []) as RrppRow[]);
+    setEventRrpps((er ?? []) as EventRrppRow[]);
     const c: Record<string, number> = {};
     (cts ?? []).forEach((r: any) => { c[r.ticket_type_id] = (c[r.ticket_type_id] || 0) + 1; });
     setCourtesyByTicket(c);
@@ -128,6 +132,16 @@ const OrganizerEventDetail = () => {
     (scans ?? []).forEach((r: any) => { s[r.ticket_type_id] = (s[r.ticket_type_id] || 0) + 1; });
     setScannedByTicket(s);
     setRevenueTotal(tt.reduce((a, t) => a + t.quantity_sold * Number(t.price), 0));
+    // rrpp sales count per event_rrpp
+    const erIds = (er ?? []).map((x: any) => x.id);
+    if (erIds.length) {
+      const { data: sales } = await supabase.from('rrpp_sales').select('event_rrpp_id').in('event_rrpp_id', erIds);
+      const rs: Record<string, number> = {};
+      (sales ?? []).forEach((r: any) => { rs[r.event_rrpp_id] = (rs[r.event_rrpp_id] || 0) + 1; });
+      setRrppSalesByEventRrpp(rs);
+    } else {
+      setRrppSalesByEventRrpp({});
+    }
     setLoading(false);
   };
 
@@ -168,11 +182,19 @@ const OrganizerEventDetail = () => {
       authorization_code: code || null,
       requires_auth_code: !!code,
     };
-    const { error } = editingTicket
-      ? await supabase.from('ticket_types').update(payload).eq('id', editingTicket.id)
-      : await supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' });
+    const query = editingTicket
+      ? supabase.from('ticket_types').update(payload).eq('id', editingTicket.id).select('*').single()
+      : supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' }).select('*').single();
+    const { data: saved, error } = await query;
     setSaving(false);
     if (error) return toast.error(error.message);
+    // Optimistically update local state so the new/edited ticket appears immediately
+    if (saved) {
+      const row = saved as TicketTypeRow;
+      setTickets(prev => editingTicket
+        ? prev.map(t => t.id === row.id ? row : t)
+        : [...prev, row]);
+    }
     toast.success(editingTicket ? 'Ticket actualizado' : 'Ticket creado');
     setTicketSheetOpen(false);
     load();
