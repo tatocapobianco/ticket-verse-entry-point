@@ -48,16 +48,12 @@ export function AppSideMenu() {
                 <Ticket className="h-4 w-4 mr-2" /> Mis entradas
               </Button>
 
-              {isOrganizer ? (
-                <Button variant="ghost" onClick={() => go('/organizer-dashboard')} className="justify-start rounded-2xl">
-                  <Users className="h-4 w-4 mr-2" /> Panel organizador
-                </Button>
-              ) : (
-                <Button variant="ghost" onClick={activateOrganizer} disabled={activating} className="justify-start rounded-2xl">
-                  {activating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Users className="h-4 w-4 mr-2" />}
-                  ¿Sos organizador? Activá tu cuenta
-                </Button>
-              )}
+              <Button variant="ghost" onClick={() => go('/organizer')} className="justify-start rounded-2xl">
+                <Users className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">
+                  {productora ? `Panel de ${productora.nombre}` : 'Panel de Organizador'}
+                </span>
+              </Button>
 
               {isScanner && (
                 <Button variant="ghost" onClick={() => go('/scanner-access')} className="justify-start rounded-2xl">
