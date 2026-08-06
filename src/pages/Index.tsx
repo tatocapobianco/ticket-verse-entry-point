@@ -168,12 +168,10 @@ const Index = () => {
     }
     setLoading(true);
     const email = registerData.email.trim();
-    const emailRedirectTo = window.location.origin + (nextPath ?? '/');
     const { data, error } = await supabase.auth.signUp({
       email,
       password: registerData.password,
       options: {
-        emailRedirectTo,
         data: {
           full_name: registerData.name,
           dni: registerData.dni,
@@ -181,33 +179,27 @@ const Index = () => {
         },
       },
     });
-    setLoading(false);
-    if (error) return fail(setRegisterError, authErrorMessage(error));
-
-    // Email confirmation enabled: no session until the user clicks the link.
-    if (!data.session) {
-      setConfirmSentTo(email);
-      toast.success('Te enviamos un email de confirmación. Revisá tu bandeja de entrada.', {
-        duration: 8000,
-      });
-      return;
+    if (error) {
+      setLoading(false);
+      return fail(setRegisterError, authErrorMessage(error));
     }
-    toast.success('¡Cuenta creada! 🎉');
+
+    // Auto-confirm está activo: si no vino sesión, iniciamos sesión al instante.
+    if (!data.session) {
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password: registerData.password,
+      });
+      if (signInErr) {
+        setLoading(false);
+        return fail(setRegisterError, authErrorMessage(signInErr));
+      }
+    }
+    setLoading(false);
+    toast.success('¡Bienvenido/a a Cupo!');
     navigate(nextPath ?? '/', { replace: true });
   };
 
-  const handleResend = async () => {
-    if (!confirmSentTo) return;
-    setLoading(true);
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: confirmSentTo,
-      options: { emailRedirectTo: window.location.origin + (nextPath ?? '/') },
-    });
-    setLoading(false);
-    if (error) return toast.error(authErrorMessage(error), { duration: 8000 });
-    toast.success('Te reenviamos el email de confirmación.');
-  };
 
 
   const handleGoogleAuth = async () => {
