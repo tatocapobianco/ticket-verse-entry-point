@@ -482,7 +482,7 @@ const OrganizerEventDetail = () => {
       </section>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        <Tabs defaultValue="tickets" className="w-full">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full flex overflow-x-auto whitespace-nowrap rounded-2xl h-auto justify-start bg-card p-1.5 soft-shadow">
             {[
               { v: 'tickets', label: 'Tickets', Icon: Ticket },
@@ -820,6 +820,11 @@ const OrganizerEventDetail = () => {
                   <div><Label>Hora</Label><Input type="time" value={sForm.time} onChange={(e) => setSForm({ ...sForm, time: e.target.value })} className="rounded-2xl" /></div>
                 </div>
                 <div><Label>Lugar</Label><Input value={sForm.location} onChange={(e) => setSForm({ ...sForm, location: e.target.value })} className="rounded-2xl" /></div>
+                <EventImageField
+                  value={pendingImage === undefined ? imageUrl : (pendingImage?.previewUrl ?? null)}
+                  onChange={setPendingImage}
+                  eventName={sForm.name || ev.name}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Visibilidad</Label>
