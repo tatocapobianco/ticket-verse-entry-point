@@ -21,6 +21,7 @@ import MercadoPagoCallback from "./pages/MercadoPagoCallback";
 import PublicEventPage from "./pages/PublicEventPage";
 import OrganizerEventDetail from "./pages/OrganizerEventDetail";
 import RrppRedirectPage from "./pages/RrppRedirectPage";
+import ProductoraPublicPage from "./pages/ProductoraPublicPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/eventos" element={<HomePage />} />
             <Route path="/evento/:id" element={<PublicEventPage />} />
+            <Route path="/productora/:slug" element={<ProductoraPublicPage />} />
             <Route path="/login" element={<Index />} />
             <Route path="/cortesia/:courtesyCode" element={<CourtesyClaimPage />} />
             <Route path="/rrpp/:link_code" element={<RrppRedirectPage />} />
@@ -50,11 +52,14 @@ const App = () => (
             <Route path="/organizer-onboarding" element={
               <ProtectedRoute><OrganizerOnboarding /></ProtectedRoute>
             } />
+            <Route path="/organizer" element={
+              <ProtectedRoute><OrganizerDashboard /></ProtectedRoute>
+            } />
             <Route path="/organizer-dashboard" element={
-              <ProtectedRoute requireRole="organizer"><OrganizerDashboard /></ProtectedRoute>
+              <ProtectedRoute><OrganizerDashboard /></ProtectedRoute>
             } />
             <Route path="/organizer/events/:id" element={
-              <ProtectedRoute requireRole="organizer"><OrganizerEventDetail /></ProtectedRoute>
+              <ProtectedRoute><OrganizerEventDetail /></ProtectedRoute>
             } />
             <Route path="/scanner-access" element={
               <ProtectedRoute><ScannerAccess /></ProtectedRoute>

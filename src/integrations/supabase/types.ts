@@ -160,6 +160,7 @@ export type Database = {
           location: string | null
           name: string
           organizer_id: string
+          productora_id: string | null
           status: string
           updated_at: string
         }
@@ -176,6 +177,7 @@ export type Database = {
           location?: string | null
           name: string
           organizer_id: string
+          productora_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -192,8 +194,59 @@ export type Database = {
           location?: string | null
           name?: string
           organizer_id?: string
+          productora_id?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_productora_id_fkey"
+            columns: ["productora_id"]
+            isOneToOne: false
+            referencedRelation: "productoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      productoras: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          email_contacto: string | null
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          nombre: string
+          slug: string
+          telefono_contacto: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          email_contacto?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          nombre: string
+          slug: string
+          telefono_contacto?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          email_contacto?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          nombre?: string
+          slug?: string
+          telefono_contacto?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -864,6 +917,19 @@ export type Database = {
           rrpp_id: string
         }[]
       }
+      get_my_productora: {
+        Args: never
+        Returns: {
+          descripcion: string
+          email_contacto: string
+          id: string
+          instagram: string
+          logo_url: string
+          nombre: string
+          slug: string
+          telefono_contacto: string
+        }[]
+      }
       get_ticket_type_auth_code: {
         Args: { _ticket_type_id: string }
         Returns: string
@@ -873,6 +939,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      productora_nombre_disponible: {
+        Args: { _nombre: string }
         Returns: boolean
       }
       release_expired_reservations: { Args: never; Returns: undefined }

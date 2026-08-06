@@ -9,14 +9,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Plus, Calendar, MapPin, Copy, LogOut, Loader2, DollarSign, Users, Wallet,
-  CheckCircle2, ChevronRight, Eye, EyeOff,
+  ChevronRight, Eye, EyeOff, CalendarPlus, Building2, Pencil,
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import cupoLogo from '@/assets/cupo-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { formatEventDate, formatARS } from '@/lib/format';
+import { formatEventDate, formatARS, eventInitials } from '@/lib/format';
 import { validateEventDate, eventDateLimits } from '@/lib/validation';
+import { useProductora } from '@/hooks/useProductora';
+import { ProductoraOnboarding } from '@/components/ProductoraOnboarding';
+import { ProductoraForm } from '@/components/ProductoraForm';
 
 
 type EventRow = {
@@ -42,6 +46,8 @@ const OrganizerDashboard = () => {
   const [saving, setSaving] = useState(false);
   const [revealedKey, setRevealedKey] = useState<Record<string, boolean>>({});
   const [accessKeys, setAccessKeys] = useState<Record<string, string>>({});
+  const [showEditProductora, setShowEditProductora] = useState(false);
+  const { productora, loading: loadingProductora, refresh: refreshProductora, setProductora } = useProductora();
 
   const dateLimits = eventDateLimits();
 
@@ -80,6 +86,7 @@ const OrganizerDashboard = () => {
       organizer_id: user.id, name: newEvent.name, description: newEvent.description || null,
       event_date: newEvent.date, event_time: newEvent.time, location: newEvent.location,
       event_number: genCode('EVT', 6), access_key: genCode('', 8).toLowerCase(),
+      productora_id: productora?.id ?? null,
       is_public: newEvent.is_public, status: newEvent.status,
     });
     setSaving(false);
@@ -129,20 +136,42 @@ const OrganizerDashboard = () => {
     return { sold, revenue, total };
   };
 
+  if (loadingProductora) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!productora) {
+    return <ProductoraOnboarding onCreated={(p) => { setProductora(p); load(); }} />;
+  }
+
   return (
     <div className="min-h-screen gradient-bg">
       <header className="glass-card border-b border-border/60 sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={cupoLogo} alt="Cupo" className="h-9 w-auto" />
-            <div>
-              <h1 className="font-display font-bold text-lg">Panel Organizador</h1>
-              <p className="text-xs text-muted-foreground">Gestioná tus eventos</p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="h-10 w-10 border border-border">
+              {productora.logo_url && <AvatarImage src={productora.logo_url} alt={`Logo de ${productora.nombre}`} className="object-cover" />}
+              <AvatarFallback className="brand-gradient-bg text-primary-foreground text-xs font-semibold">
+                {eventInitials(productora.nombre)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <h1 className="font-display font-bold text-lg truncate">{productora.nombre}</h1>
+                <Badge className="bg-primary text-primary-foreground hover:bg-primary shrink-0">Modo productor</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Gestioná tus eventos y entradas</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate('/')} className="rounded-full">Inicio</Button>
-            <Button variant="ghost" onClick={async () => { await signOut(); navigate('/'); }} className="rounded-full">
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" onClick={() => navigate('/')} className="rounded-full">
+              Volver a modo comprador
+            </Button>
+            <Button variant="ghost" onClick={async () => { await signOut(); navigate('/'); }} className="rounded-full" aria-label="Cerrar sesión">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -164,8 +193,22 @@ const OrganizerDashboard = () => {
           </CardContent>
         </Card>
 
-
-
+        <Card className="glass-card border-border/60 rounded-2xl">
+          <CardContent className="p-5 flex items-center gap-4 flex-wrap">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-accent/10 text-accent">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <p className="font-semibold">Mi productora</p>
+              <p className="text-xs text-muted-foreground">
+                Editá tu nombre, logo, descripción y datos de contacto. Perfil público: /productora/{productora.slug}
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => setShowEditProductora(true)} className="rounded-full">
+              <Pencil className="h-4 w-4 mr-2" /> Editar productora
+            </Button>
+          </CardContent>
+        </Card>
 
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-display font-bold">Mis eventos</h2>
@@ -178,10 +221,16 @@ const OrganizerDashboard = () => {
           <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : events.length === 0 ? (
           <Card className="glass-card rounded-2xl">
-            <CardContent className="p-10 text-center space-y-3">
-              <p className="text-muted-foreground">Todavía no creaste ningún evento. ¡Creá tu primer evento!</p>
-              <Button onClick={() => setShowCreateEvent(true)} className="rounded-full brand-gradient-bg text-primary-foreground">
-                <Plus className="h-4 w-4 mr-2" /> Crear evento
+            <CardContent className="p-12 flex flex-col items-center text-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                <CalendarPlus className="h-8 w-8" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-xl">Todavía no creaste ningún evento</h3>
+                <p className="text-muted-foreground mt-1">Publicá tu primer evento y empezá a vender entradas hoy mismo</p>
+              </div>
+              <Button onClick={() => setShowCreateEvent(true)} className="rounded-full h-12 px-6 brand-gradient-bg text-primary-foreground font-semibold soft-shadow">
+                <Plus className="h-4 w-4 mr-2" /> Crear mi primer evento
               </Button>
             </CardContent>
           </Card>
@@ -284,6 +333,22 @@ const OrganizerDashboard = () => {
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear evento'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editar productora */}
+      <Dialog open={showEditProductora} onOpenChange={setShowEditProductora}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">Mi productora</DialogTitle>
+            <DialogDescription>Estos datos se muestran en tus eventos y en tu perfil público.</DialogDescription>
+          </DialogHeader>
+          <ProductoraForm
+            productora={productora}
+            showContactEmail
+            submitLabel="Guardar cambios"
+            onSaved={(p) => { setProductora(p); setShowEditProductora(false); refreshProductora(); }}
+          />
         </DialogContent>
       </Dialog>
     </div>

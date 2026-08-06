@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Loader2, AlertCircle, LogIn } from 'lucide-react';
 import cupoLogo from '@/assets/cupo-logo.png';
 import { useAuth } from '@/hooks/useAuth';
-import { formatEventDate, formatARS } from '@/lib/format';
+import { formatEventDate, formatARS, eventInitials } from '@/lib/format';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const initials = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'EV';
@@ -18,16 +19,25 @@ const PublicEventPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<any>(null);
+  const [productora, setProductora] = useState<any>(null);
   const [tickets, setTickets] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       if (!id) return;
-      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,event_number,is_public,status').eq('id', id).maybeSingle();
+      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,event_number,is_public,status,productora_id').eq('id', id).maybeSingle();
       if (!ev) { setError('not_found'); setLoading(false); return; }
       if (ev.status !== 'active') { setError('inactive'); setLoading(false); return; }
       setEvent(ev);
+      if (ev.productora_id) {
+        const { data: prod } = await supabase
+          .from('productoras')
+          .select('nombre,slug,logo_url')
+          .eq('id', ev.productora_id)
+          .maybeSingle();
+        setProductora(prod ?? null);
+      }
       const { data: tts } = await supabase
         .from('ticket_types')
         .select('id,name,price,quantity_total,quantity_sold,status,is_courtesy')
@@ -88,6 +98,22 @@ const PublicEventPage = () => {
           <div className="absolute inset-x-0 bottom-0 max-w-4xl mx-auto px-4 sm:px-6 pb-6">
             {!event.is_public && <Badge variant="secondary" className="mb-3">Privado</Badge>}
             <h1 className="font-display font-bold text-3xl md:text-5xl text-primary-foreground drop-shadow">{event.name}</h1>
+            {productora && (
+              <div className="mt-3 flex items-center gap-2">
+                <Avatar className="h-7 w-7 border border-primary-foreground/40">
+                  {productora.logo_url && <AvatarImage src={productora.logo_url} alt={`Logo de ${productora.nombre}`} className="object-cover" />}
+                  <AvatarFallback className="bg-card text-primary text-[10px] font-semibold">
+                    {eventInitials(productora.nombre)}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-sm text-primary-foreground/90">
+                  Organiza:{' '}
+                  <Link to={`/productora/${productora.slug}`} className="font-semibold underline underline-offset-2 hover:text-primary-foreground">
+                    {productora.nombre}
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
