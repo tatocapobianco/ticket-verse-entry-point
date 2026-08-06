@@ -99,6 +99,9 @@ const OrganizerEventDetail = () => {
     name: '', description: '', location: '', date: '', time: '',
     is_public: true, status: 'active',
   });
+  // Imagen del evento: URL guardada + cambio pendiente (blob a subir, o null = borrar)
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [pendingImage, setPendingImage] = useState<{ previewUrl: string; blob: Blob } | null | undefined>(undefined);
 
   const load = async () => {
     if (!id || !user) return;
