@@ -315,6 +315,51 @@ export default function AdminSupport() {
           </TableShell>
         </div>
       )}
+
+      <Dialog open={!eventId && !!purchaseId} onOpenChange={(o) => !o && setPurchaseId(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Tickets de la compra</DialogTitle>
+            <DialogDescription>Podés reenviarlos por email o cambiar su estado de uso.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <TableShell cols={['Tanda', 'Código', 'Titular', 'Estado', 'Acciones']}>
+              {tickets.length === 0 ? (
+                <EmptyRow span={5} text="Esta compra todavía no generó tickets." />
+              ) : (
+                tickets.map((t: any) => (
+                  <tr key={t.id}>
+                    <td className={tdClass}>{t.ticket_type}</td>
+                    <td className={`${tdClass} font-mono text-xs`}>{t.qr_code}</td>
+                    <td className={tdClass}>{t.owner_email ?? '—'}</td>
+                    <td className={tdClass}>
+                      <Badge variant={t.status === 'used' ? 'secondary' : 'default'}>
+                        {t.status === 'used' ? 'Usado' : 'Válido'}
+                      </Badge>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex flex-wrap gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => resend(t)}>
+                          <Mail className="h-3.5 w-3.5 mr-1" /> Reenviar
+                        </Button>
+                        {t.status === 'used' ? (
+                          <Button variant="ghost" size="sm" onClick={() => setUsed(t, false)}>
+                            <Undo2 className="h-3.5 w-3.5 mr-1" /> Revertir
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => setUsed(t, true)}>
+                            <Check className="h-3.5 w-3.5 mr-1" /> Marcar usado
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </TableShell>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
