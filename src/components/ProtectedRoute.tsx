@@ -6,11 +6,10 @@ import { useAuth, AppRole } from '@/hooks/useAuth';
 interface Props {
   children: ReactNode;
   requireRole?: AppRole;
-  requireVerifiedEmail?: boolean;
 }
 
-export function ProtectedRoute({ children, requireRole, requireVerifiedEmail }: Props) {
-  const { session, roles, emailVerified, loading } = useAuth();
+export function ProtectedRoute({ children, requireRole }: Props) {
+  const { session, roles, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -24,10 +23,6 @@ export function ProtectedRoute({ children, requireRole, requireVerifiedEmail }: 
   if (!session) {
     const next = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?next=${next}`} replace />;
-  }
-
-  if (requireVerifiedEmail && !emailVerified) {
-    return <Navigate to="/verify-email" replace />;
   }
 
   if (requireRole && !roles.includes(requireRole)) {

@@ -15,7 +15,6 @@ import ScannerDashboard from "./pages/ScannerDashboard";
 import PurchasePage from "./pages/PurchasePage";
 import PurchaseResult from "./pages/PurchaseResult";
 import CourtesyClaimPage from "./pages/CourtesyClaimPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
 import MercadoPagoCallback from "./pages/MercadoPagoCallback";
@@ -45,9 +44,6 @@ const App = () => (
             } />
 
             {/* Auth-required */}
-            <Route path="/verify-email" element={
-              <ProtectedRoute><VerifyEmailPage /></ProtectedRoute>
-            } />
             <Route path="/buyer-dashboard" element={
               <ProtectedRoute><BuyerDashboard /></ProtectedRoute>
             } />
@@ -67,7 +63,7 @@ const App = () => (
               <ProtectedRoute><ScannerDashboard /></ProtectedRoute>
             } />
             <Route path="/purchase/:eventId/:ticketId" element={
-              <ProtectedRoute requireVerifiedEmail><PurchasePage /></ProtectedRoute>
+              <ProtectedRoute><PurchasePage /></ProtectedRoute>
             } />
             <Route path="/purchase-result" element={
               <ProtectedRoute><PurchaseResult /></ProtectedRoute>
