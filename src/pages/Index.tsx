@@ -337,6 +337,13 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="register" className="mt-6 space-y-4">
+              {registerError && (
+                <Alert variant="destructive" className="rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{registerError}</AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 onClick={handleGoogleAuth}
                 variant="outline"
