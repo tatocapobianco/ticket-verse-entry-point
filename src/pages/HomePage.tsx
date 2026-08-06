@@ -3,14 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Calendar, MapPin, Loader2, LogIn } from 'lucide-react';
 import cupoLogo from '@/assets/cupo-logo.png';
 import { AppSideMenu } from '@/components/AppSideMenu';
+import { UserMenu } from '@/components/UserMenu';
+import { EventCover } from '@/components/EventCover';
 import { formatEventDate, formatARS } from '@/lib/format';
 import { useAuth } from '@/hooks/useAuth';
-import { format, parse } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 type Ev = {
   id: string; name: string; description: string | null;
@@ -18,18 +17,6 @@ type Ev = {
   location: string | null; image_url: string | null;
 };
 
-const initials = (name: string) =>
-  name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'EV';
-
-const shortDate = (date?: string | null) => {
-  if (!date) return null;
-  try {
-    const d = parse(date, 'yyyy-MM-dd', new Date());
-    return format(d, "d MMM", { locale: es }).toUpperCase();
-  } catch {
-    return date;
-  }
-};
 
 const HomePage = () => {
   const [events, setEvents] = useState<Ev[]>([]);
@@ -78,13 +65,8 @@ const HomePage = () => {
             </Link>
           </div>
           {user ? (
-            <button onClick={() => navigate('/buyer-dashboard')} aria-label="Mi cuenta">
-              <Avatar className="h-9 w-9 border border-border">
-                <AvatarFallback className="brand-gradient-bg text-primary-foreground text-sm font-semibold">
-                  {(user.email ?? 'U')[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </button>
+            <UserMenu />
+
           ) : (
             <Button onClick={() => navigate('/login')} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
               <LogIn className="h-4 w-4 mr-2" /> Iniciar sesión
@@ -120,20 +102,8 @@ const HomePage = () => {
             {events.map((ev) => (
               <Link key={ev.id} to={`/evento/${ev.id}`} className="block group">
                 <Card className="rounded-2xl overflow-hidden border-border soft-shadow transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
-                  <div className="relative aspect-[16/10]">
-                    {ev.image_url ? (
-                      <div className="absolute inset-0" style={{ backgroundImage: `url(${ev.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                    ) : (
-                      <div className="absolute inset-0 brand-hero-gradient flex items-center justify-center">
-                        <span className="font-display font-bold text-4xl text-primary-foreground/90">{initials(ev.name)}</span>
-                      </div>
-                    )}
-                    {ev.event_date && (
-                      <span className="absolute top-3 left-3 rounded-full bg-card/95 px-3 py-1 text-xs font-display font-semibold text-foreground shadow">
-                        {shortDate(ev.event_date)}
-                      </span>
-                    )}
-                  </div>
+                  <EventCover name={ev.name} imageUrl={ev.image_url} date={ev.event_date} />
+
                   <CardContent className="p-5 space-y-2">
                     <h3 className="font-display font-bold text-lg line-clamp-2">{ev.name}</h3>
                     {ev.event_date && (

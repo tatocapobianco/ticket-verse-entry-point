@@ -16,6 +16,7 @@ import cupoLogo from '@/assets/cupo-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
+import { validateEventDate, eventDateLimits } from '@/lib/validation';
 
 
 type EventRow = {
@@ -41,6 +42,8 @@ const OrganizerDashboard = () => {
   const [saving, setSaving] = useState(false);
   const [revealedKey, setRevealedKey] = useState<Record<string, boolean>>({});
   const [accessKeys, setAccessKeys] = useState<Record<string, string>>({});
+
+  const dateLimits = eventDateLimits();
 
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
 
@@ -69,6 +72,8 @@ const OrganizerDashboard = () => {
     if (!newEvent.name || !newEvent.date || !newEvent.time || !newEvent.location) {
       toast.error('Completá nombre, fecha, hora y lugar'); return;
     }
+    const dateError = validateEventDate(newEvent.date);
+    if (dateError) { toast.error(dateError); return; }
     if (!user) return;
     setSaving(true);
     const { error } = await supabase.from('events').insert({
@@ -256,7 +261,13 @@ const OrganizerDashboard = () => {
             <div><Label>Nombre *</Label><Input value={newEvent.name} onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })} className="rounded-2xl" /></div>
             <div><Label>Descripción</Label><Textarea value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} className="rounded-2xl" /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Fecha *</Label><Input type="date" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} className="rounded-2xl" /></div>
+              <div>
+                <Label>Fecha *</Label>
+                <Input type="date" min={dateLimits.min} max={dateLimits.max} value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} className="rounded-2xl" />
+                {newEvent.date && validateEventDate(newEvent.date) && (
+                  <p className="text-xs text-destructive mt-1">{validateEventDate(newEvent.date)}</p>
+                )}
+              </div>
               <div><Label>Hora *</Label><Input type="time" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} className="rounded-2xl" /></div>
             </div>
             <div><Label>Lugar *</Label><Input value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} className="rounded-2xl" /></div>

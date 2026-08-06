@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
+import { validateEventDate, eventDateLimits } from '@/lib/validation';
 
 const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
 const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
@@ -347,6 +348,10 @@ const OrganizerEventDetail = () => {
 
   const saveSettings = async () => {
     if (!ev) return;
+    if (sForm.date) {
+      const dateError = validateEventDate(sForm.date);
+      if (dateError) { toast.error(dateError); return; }
+    }
     setSaving(true);
     const { error } = await supabase.from('events').update({
       name: sForm.name, description: sForm.description || null,
@@ -771,7 +776,7 @@ const OrganizerEventDetail = () => {
                 <div><Label>Nombre</Label><Input value={sForm.name} onChange={(e) => setSForm({ ...sForm, name: e.target.value })} className="rounded-2xl" /></div>
                 <div><Label>Descripción</Label><Textarea value={sForm.description} onChange={(e) => setSForm({ ...sForm, description: e.target.value })} className="rounded-2xl" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Fecha</Label><Input type="date" value={sForm.date} onChange={(e) => setSForm({ ...sForm, date: e.target.value })} className="rounded-2xl" /></div>
+                  <div><Label>Fecha</Label><Input type="date" min={eventDateLimits().min} max={eventDateLimits().max} value={sForm.date} onChange={(e) => setSForm({ ...sForm, date: e.target.value })} className="rounded-2xl" /></div>
                   <div><Label>Hora</Label><Input type="time" value={sForm.time} onChange={(e) => setSForm({ ...sForm, time: e.target.value })} className="rounded-2xl" /></div>
                 </div>
                 <div><Label>Lugar</Label><Input value={sForm.location} onChange={(e) => setSForm({ ...sForm, location: e.target.value })} className="rounded-2xl" /></div>
