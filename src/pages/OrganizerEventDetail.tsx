@@ -211,8 +211,8 @@ const OrganizerEventDetail = () => {
       requires_auth_code: !!code,
     };
     const query = editingTicket
-      ? supabase.from('ticket_types').update(payload).eq('id', editingTicket.id).select('*').single()
-      : supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' }).select('*').single();
+      ? supabase.from('ticket_types').update(payload).eq('id', editingTicket.id).select(TT_COLS).single()
+      : supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' }).select(TT_COLS).single();
     const { data: saved, error } = await query;
     setSaving(false);
     if (error) return toast.error(error.message);
