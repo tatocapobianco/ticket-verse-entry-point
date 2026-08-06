@@ -95,3 +95,10 @@ export async function deleteEventImage(path?: string | null) {
   if (!path) return;
   await supabase.storage.from(EVENT_IMAGE_BUCKET).remove([path]);
 }
+
+/** Extrae el path dentro del bucket a partir de una URL firmada guardada en el evento. */
+export function pathFromEventImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const m = url.match(new RegExp(`/object/(?:sign|public)/${EVENT_IMAGE_BUCKET}/([^?]+)`));
+  return m ? decodeURIComponent(m[1]) : null;
+}
