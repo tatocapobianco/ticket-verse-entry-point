@@ -235,10 +235,10 @@ const BuyerDashboard = () => {
                   const used = ticket.status === 'used' || !!ticket.used_at;
                   const revealed = revealedQR[ticket.id];
                   return (
-                    <Card key={ticket.id} className="rounded-3xl border-l-4 border-l-primary soft-shadow">
+                    <Card key={ticket.id} className="rounded-2xl border-l-4 border-l-primary soft-shadow">
                       <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span>{ticket.event?.name ?? 'Evento'}</span>
+                        <CardTitle className="font-display flex items-center justify-between gap-2">
+                          <span className="truncate">{ticket.event?.name ?? 'Evento'}</span>
                           <Badge variant={!used ? 'default' : 'destructive'}>
                             {used ? 'Usado' : 'Válido'}
                           </Badge>
@@ -254,9 +254,10 @@ const BuyerDashboard = () => {
                           {ticket.event?.event_date && (
                             <div className="flex items-center text-sm">
                               <Calendar className="h-4 w-4 mr-2" />
-                              {ticket.event.event_date}{ticket.event.event_time ? ` - ${ticket.event.event_time}` : ''}
+                              {formatEventDate(ticket.event.event_date, ticket.event.event_time)}
                             </div>
                           )}
+
                           {ticket.event?.location && (
                             <div className="flex items-center text-sm">
                               <MapPin className="h-4 w-4 mr-2" />
