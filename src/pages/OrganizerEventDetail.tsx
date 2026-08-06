@@ -339,9 +339,10 @@ const OrganizerEventDetail = () => {
   };
 
   const copyAccessKey = async () => {
-    if (!ev) return;
-    await navigator.clipboard.writeText(ev.access_key);
+    if (!accessKey) return toast.error('No se pudo obtener la clave');
+    await navigator.clipboard.writeText(accessKey);
     toast.success('Clave copiada');
+
   };
 
   const saveSettings = async () => {
@@ -424,7 +425,7 @@ const OrganizerEventDetail = () => {
               </span>
               <span className="rounded-full bg-card/95 px-4 py-1.5 text-sm flex items-center gap-1">
                 <span className="text-muted-foreground">Clave escáner</span>
-                <span className="font-mono">{showKey ? ev.access_key : '••••••'}</span>
+                <span className="font-mono">{showKey ? (accessKey ?? '—') : '••••••'}</span>
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setShowKey(v => !v)}>
                   {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
