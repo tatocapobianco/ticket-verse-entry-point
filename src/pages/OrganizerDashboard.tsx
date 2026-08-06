@@ -316,7 +316,7 @@ const OrganizerDashboard = () => {
 
       {/* Create event dialog */}
       <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nuevo evento</DialogTitle>
             <DialogDescription>Completá los datos principales. Podés editar el resto después.</DialogDescription>
@@ -335,6 +335,11 @@ const OrganizerDashboard = () => {
               <div><Label>Hora *</Label><Input type="time" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} className="rounded-2xl" /></div>
             </div>
             <div><Label>Lugar *</Label><Input value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} className="rounded-2xl" /></div>
+            <EventImageField
+              value={newImage?.previewUrl ?? null}
+              onChange={setNewImage}
+              eventName={newEvent.name}
+            />
             <div>
               <Label>Visibilidad</Label>
               <select value={newEvent.is_public ? 'public' : 'private'} onChange={(e) => setNewEvent({ ...newEvent, is_public: e.target.value === 'public' })} className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm">
