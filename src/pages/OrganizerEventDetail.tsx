@@ -25,6 +25,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
 import { validateEventDate, eventDateLimits } from '@/lib/validation';
+import { EventImageField } from '@/components/EventImageField';
+import { uploadEventImage, deleteEventImage, pathFromEventImageUrl } from '@/lib/eventImage';
 
 const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
 const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
