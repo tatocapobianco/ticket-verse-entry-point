@@ -142,14 +142,9 @@ const Index = () => {
     });
     setLoading(false);
     if (error) {
-      const message = authErrorMessage(error);
-      fail(setLoginError, message);
-      const raw = (error.message ?? '').toLowerCase();
-      if (raw.includes('email not confirmed') || error.code === 'email_not_confirmed') {
-        setConfirmSentTo(identifier);
-      }
-      return;
+      return fail(setLoginError, authErrorMessage(error));
     }
+
 
     toast.success('¡Hola de nuevo! 👋');
     navigate(nextPath ?? '/', { replace: true });
