@@ -40,6 +40,8 @@ const OrganizerDashboard = () => {
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [revealedKey, setRevealedKey] = useState<Record<string, boolean>>({});
+  const [accessKeys, setAccessKeys] = useState<Record<string, string>>({});
+
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
 
   const load = async () => {
