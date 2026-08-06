@@ -54,6 +54,7 @@ const PurchasePage = () => {
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [now, setNow] = useState(Date.now());
   const [processing, setProcessing] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const [recaptchaKey, setRecaptchaKey] = useState<string | null>(null);
 
   useEffect(() => {
