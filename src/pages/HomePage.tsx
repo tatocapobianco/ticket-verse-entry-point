@@ -102,20 +102,8 @@ const HomePage = () => {
             {events.map((ev) => (
               <Link key={ev.id} to={`/evento/${ev.id}`} className="block group">
                 <Card className="rounded-2xl overflow-hidden border-border soft-shadow transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
-                  <div className="relative aspect-[16/10]">
-                    {ev.image_url ? (
-                      <div className="absolute inset-0" style={{ backgroundImage: `url(${ev.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                    ) : (
-                      <div className="absolute inset-0 brand-hero-gradient flex items-center justify-center">
-                        <span className="font-display font-bold text-4xl text-primary-foreground/90">{initials(ev.name)}</span>
-                      </div>
-                    )}
-                    {ev.event_date && (
-                      <span className="absolute top-3 left-3 rounded-full bg-card/95 px-3 py-1 text-xs font-display font-semibold text-foreground shadow">
-                        {shortDate(ev.event_date)}
-                      </span>
-                    )}
-                  </div>
+                  <EventCover name={ev.name} imageUrl={ev.image_url} date={ev.event_date} />
+
                   <CardContent className="p-5 space-y-2">
                     <h3 className="font-display font-bold text-lg line-clamp-2">{ev.name}</h3>
                     {ev.event_date && (
