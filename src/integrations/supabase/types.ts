@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       courtesy_links: {
         Row: {
           code: string
@@ -218,6 +254,9 @@ export type Database = {
           logo_url: string | null
           nombre: string
           slug: string
+          suspended: boolean
+          suspended_at: string | null
+          suspended_reason: string | null
           telefono_contacto: string | null
           updated_at: string
           user_id: string
@@ -231,6 +270,9 @@ export type Database = {
           logo_url?: string | null
           nombre: string
           slug: string
+          suspended?: boolean
+          suspended_at?: string | null
+          suspended_reason?: string | null
           telefono_contacto?: string | null
           updated_at?: string
           user_id: string
@@ -244,6 +286,9 @@ export type Database = {
           logo_url?: string | null
           nombre?: string
           slug?: string
+          suspended?: boolean
+          suspended_at?: string | null
+          suspended_reason?: string | null
           telefono_contacto?: string | null
           updated_at?: string
           user_id?: string
@@ -264,6 +309,8 @@ export type Database = {
           mp_refresh_token: string | null
           mp_user_id: string | null
           organization_name: string | null
+          suspended: boolean
+          suspended_at: string | null
           updated_at: string
         }
         Insert: {
@@ -279,6 +326,8 @@ export type Database = {
           mp_refresh_token?: string | null
           mp_user_id?: string | null
           organization_name?: string | null
+          suspended?: boolean
+          suspended_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -294,6 +343,8 @@ export type Database = {
           mp_refresh_token?: string | null
           mp_user_id?: string | null
           organization_name?: string | null
+          suspended?: boolean
+          suspended_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -495,6 +546,73 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlements: {
+        Row: {
+          commission: number
+          created_at: string
+          event_id: string | null
+          gross: number
+          id: string
+          net: number
+          note: string | null
+          paid_at: string | null
+          paid_by: string | null
+          productora_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commission?: number
+          created_at?: string
+          event_id?: string | null
+          gross?: number
+          id?: string
+          net?: number
+          note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          productora_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commission?: number
+          created_at?: string
+          event_id?: string | null
+          gross?: number
+          id?: string
+          net?: number
+          note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          productora_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlements_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_productora_id_fkey"
+            columns: ["productora_id"]
+            isOneToOne: false
+            referencedRelation: "productoras"
             referencedColumns: ["id"]
           },
         ]
@@ -973,7 +1091,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "buyer" | "organizer" | "scanner" | "admin"
+      app_role: "buyer" | "organizer" | "scanner" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1101,7 +1219,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["buyer", "organizer", "scanner", "admin"],
+      app_role: ["buyer", "organizer", "scanner", "admin", "super_admin"],
     },
   },
 } as const
