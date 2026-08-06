@@ -773,28 +773,30 @@ const OrganizerEventDetail = () => {
               <CardContent className="space-y-3">
                 {rows.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Sin datos aún.</p>
-                ) : rows.map(({ t, sent, scanned, total, overflow }) => (
+                ) : rows.map(({ t, generated, used, scanned, total, overflow }) => (
                   <div key={t.id} className="p-4 rounded-2xl bg-secondary/30 space-y-1">
                     <div className="flex items-center justify-between">
                       <p className="font-semibold">{t.name}</p>
                       {overflow && <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Excede stock</Badge>}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
                       <div><p className="text-muted-foreground">Vendidas</p><p className="font-bold text-sm">{t.quantity_sold}</p></div>
                       <div><p className="text-muted-foreground">Ingresos</p><p className="font-bold text-sm">{formatARS(t.quantity_sold * Number(t.price))}</p></div>
-                      <div><p className="text-muted-foreground">Cortesías enviadas</p><p className="font-bold text-sm">{sent}</p></div>
+                      <div><p className="text-muted-foreground">Cortesías generadas</p><p className="font-bold text-sm">{generated}</p></div>
+                      <div><p className="text-muted-foreground">Cortesías usadas</p><p className="font-bold text-sm">{used}</p></div>
                       <div><p className="text-muted-foreground">Escaneadas</p><p className="font-bold text-sm">{scanned}</p></div>
-                      {total > 0 && <div className="col-span-2 md:col-span-4"><p className="text-muted-foreground">Disponibles</p><p className="font-bold text-sm">{Math.max(0, total - t.quantity_sold - sent)} / {total}</p></div>}
+                      {total > 0 && <div className="col-span-2 md:col-span-5"><p className="text-muted-foreground">Disponibles</p><p className="font-bold text-sm">{Math.max(0, total - t.quantity_sold - generated)} / {total}</p></div>}
                     </div>
                   </div>
                 ))}
                 {rows.length > 0 && (
                   <div className="p-4 rounded-2xl brand-gradient-bg text-primary-foreground">
                     <p className="text-xs opacity-90">Total del evento</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mt-1">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm mt-1">
                       <div><p className="opacity-90">Vendidas</p><p className="font-bold text-base">{totalSold}</p></div>
                       <div><p className="opacity-90">Ingresos</p><p className="font-bold text-base">{formatARS(revenueTotal)}</p></div>
-                      <div><p className="opacity-90">Cortesías</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.sent, 0)}</p></div>
+                      <div><p className="opacity-90">Cortesías generadas</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.generated, 0)}</p></div>
+                      <div><p className="opacity-90">Cortesías usadas</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.used, 0)}</p></div>
                       <div><p className="opacity-90">Escaneadas</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.scanned, 0)}</p></div>
                     </div>
                   </div>
