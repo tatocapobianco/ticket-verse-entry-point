@@ -29,7 +29,9 @@ type EventRow = {
   id: string; name: string; description: string | null;
   event_date: string | null; event_time: string | null; location: string | null;
   event_number: string; access_key: string; is_public: boolean; status: string;
+  image_url?: string | null;
 };
+
 type TicketTypeRow = {
   id: string; event_id: string; name: string; description: string | null;
   price: number; quantity_total: number | null; quantity_sold: number;
