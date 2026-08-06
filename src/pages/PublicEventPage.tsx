@@ -40,7 +40,7 @@ const PublicEventPage = () => {
       }
       const { data: tts } = await supabase
         .from('ticket_types')
-        .select('id,name,price,quantity_total,quantity_sold,status,is_courtesy')
+        .select('id,name,description,price,quantity_total,quantity_sold,status,is_courtesy')
         .eq('event_id', id)
         .eq('is_courtesy', false)
         .eq('status', 'active');
@@ -48,6 +48,33 @@ const PublicEventPage = () => {
       setLoading(false);
     })();
   }, [id]);
+
+  // SEO / social preview: título, descripción y og:image (flyer) del evento
+  useEffect(() => {
+    if (!event) return;
+    const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
+      let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+    const title = `${event.name} · Entradas en Cupo`;
+    const desc = (event.description || `Conseguí tus entradas para ${event.name} en Cupo.`).slice(0, 155);
+    document.title = title;
+    setMeta('name', 'description', desc);
+    setMeta('property', 'og:title', title);
+    setMeta('property', 'og:description', desc);
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:url', window.location.href);
+    setMeta('name', 'twitter:card', event.image_url ? 'summary_large_image' : 'summary');
+    if (event.image_url) {
+      setMeta('property', 'og:image', event.image_url);
+      setMeta('name', 'twitter:image', event.image_url);
+    }
+  }, [event]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
