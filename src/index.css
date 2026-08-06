@@ -7,8 +7,9 @@
 
 @layer base {
   :root {
-    --background: 250 40% 99%;
+    --background: 210 40% 96%;
     --foreground: 240 15% 12%;
+
 
     --card: 0 0% 100%;
     --card-foreground: 240 15% 12%;
@@ -114,3 +115,8 @@
 .brand-gradient-bg {
   background: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 85% 62%));
 }
+
+.brand-hero-gradient {
+  background: linear-gradient(120deg, hsl(262 83% 58%) 0%, hsl(275 80% 58%) 45%, hsl(24 95% 53%) 100%);
+}
+
