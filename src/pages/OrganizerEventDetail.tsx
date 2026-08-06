@@ -353,16 +353,36 @@ const OrganizerEventDetail = () => {
   };
 
   const saveSettings = async () => {
-    if (!ev) return;
+    if (!ev || !user) return;
     if (sForm.date) {
       const dateError = validateEventDate(sForm.date);
       if (dateError) { toast.error(dateError); return; }
     }
     setSaving(true);
+
+    // Resolver el cambio de imagen: undefined = sin cambios, null = borrar, objeto = reemplazar
+    let nextImageUrl = imageUrl;
+    if (pendingImage !== undefined) {
+      const oldPath = pathFromEventImageUrl(imageUrl);
+      if (pendingImage === null) {
+        nextImageUrl = null;
+      } else {
+        try {
+          nextImageUrl = (await uploadEventImage(pendingImage.blob, user.id)).url;
+        } catch (e: any) {
+          setSaving(false);
+          toast.error(e?.message ?? 'No se pudo subir la imagen');
+          return;
+        }
+      }
+      await deleteEventImage(oldPath);
+    }
+
     const { error } = await supabase.from('events').update({
       name: sForm.name, description: sForm.description || null,
       location: sForm.location || null,
       event_date: sForm.date || null, event_time: sForm.time || null,
+      image_url: nextImageUrl,
       is_public: sForm.is_public, status: sForm.status,
     }).eq('id', ev.id);
     setSaving(false);
@@ -371,14 +391,24 @@ const OrganizerEventDetail = () => {
     load(false);
   };
 
+  /** Cortesías generadas (cupos creados en links) por tipo de ticket. */
+  const generatedByTicket = useMemo(() => {
+    const acc: Record<string, number> = {};
+    links.forEach((l) => {
+      acc[l.ticket_type_id] = (acc[l.ticket_type_id] || 0) + l.max_uses;
+    });
+    return acc;
+  }, [links]);
+
   const rows = useMemo(() =>
     tickets.map((t) => {
-      const sent = courtesyByTicket[t.id] || 0;
+      const generated = generatedByTicket[t.id] || 0;
+      const used = courtesyByTicket[t.id] || 0;
       const scanned = scannedByTicket[t.id] || 0;
       const total = t.quantity_total ?? 0;
-      const overflow = total > 0 && (t.quantity_sold + sent) > total;
-      return { t, sent, scanned, total, overflow };
-    }), [tickets, courtesyByTicket, scannedByTicket]);
+      const overflow = total > 0 && (t.quantity_sold + generated) > total;
+      return { t, generated, used, scanned, total, overflow };
+    }), [tickets, generatedByTicket, courtesyByTicket, scannedByTicket]);
 
   if (loading || !ev) {
     return (
