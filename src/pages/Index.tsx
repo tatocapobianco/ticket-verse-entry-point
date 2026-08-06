@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Loader2, Mail, Lock, User, IdCard, Sparkles, Cake, AlertCircle, MailCheck } from 'lucide-react';
+import { Loader2, Mail, Lock, User, IdCard, Sparkles, Cake, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -62,7 +62,7 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
-  const [confirmSentTo, setConfirmSentTo] = useState<string | null>(null);
+  
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '',
@@ -142,14 +142,9 @@ const Index = () => {
     });
     setLoading(false);
     if (error) {
-      const message = authErrorMessage(error);
-      fail(setLoginError, message);
-      const raw = (error.message ?? '').toLowerCase();
-      if (raw.includes('email not confirmed') || error.code === 'email_not_confirmed') {
-        setConfirmSentTo(identifier);
-      }
-      return;
+      return fail(setLoginError, authErrorMessage(error));
     }
+
 
     toast.success('¡Hola de nuevo! 👋');
     navigate(nextPath ?? '/', { replace: true });
@@ -168,12 +163,10 @@ const Index = () => {
     }
     setLoading(true);
     const email = registerData.email.trim();
-    const emailRedirectTo = window.location.origin + (nextPath ?? '/');
     const { data, error } = await supabase.auth.signUp({
       email,
       password: registerData.password,
       options: {
-        emailRedirectTo,
         data: {
           full_name: registerData.name,
           dni: registerData.dni,
@@ -181,33 +174,27 @@ const Index = () => {
         },
       },
     });
-    setLoading(false);
-    if (error) return fail(setRegisterError, authErrorMessage(error));
-
-    // Email confirmation enabled: no session until the user clicks the link.
-    if (!data.session) {
-      setConfirmSentTo(email);
-      toast.success('Te enviamos un email de confirmación. Revisá tu bandeja de entrada.', {
-        duration: 8000,
-      });
-      return;
+    if (error) {
+      setLoading(false);
+      return fail(setRegisterError, authErrorMessage(error));
     }
-    toast.success('¡Cuenta creada! 🎉');
+
+    // Auto-confirm está activo: si no vino sesión, iniciamos sesión al instante.
+    if (!data.session) {
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password: registerData.password,
+      });
+      if (signInErr) {
+        setLoading(false);
+        return fail(setRegisterError, authErrorMessage(signInErr));
+      }
+    }
+    setLoading(false);
+    toast.success('¡Bienvenido/a a Cupo!');
     navigate(nextPath ?? '/', { replace: true });
   };
 
-  const handleResend = async () => {
-    if (!confirmSentTo) return;
-    setLoading(true);
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: confirmSentTo,
-      options: { emailRedirectTo: window.location.origin + (nextPath ?? '/') },
-    });
-    setLoading(false);
-    if (error) return toast.error(authErrorMessage(error), { duration: 8000 });
-    toast.success('Te reenviamos el email de confirmación.');
-  };
 
 
   const handleGoogleAuth = async () => {
@@ -232,39 +219,8 @@ const Index = () => {
     </svg>
   );
 
-  if (confirmSentTo) {
-    return (
-      <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-        <div className="w-full max-w-md glass-card rounded-3xl p-8 text-center">
-          <img src={cupoLogo} alt="Cupo" className="mx-auto h-12 w-auto mb-6" />
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
-            <MailCheck className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold font-display mb-2">Revisá tu email</h1>
-          <p className="text-muted-foreground mb-6">
-            Te enviamos un email de confirmación a <strong>{confirmSentTo}</strong>. Abrí el link para
-            activar tu cuenta y poder ingresar.
-          </p>
-          <div className="space-y-3">
-            <Button
-              onClick={handleResend}
-              disabled={loading}
-              className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground font-semibold"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reenviar email'}
-            </Button>
-            <Button
-              onClick={() => setConfirmSentTo(null)}
-              variant="outline"
-              className="w-full h-12 rounded-2xl"
-            >
-              Volver a iniciar sesión
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
+
 
   return (
 
