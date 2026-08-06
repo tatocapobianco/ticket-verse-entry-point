@@ -13,9 +13,11 @@ import { Ticket, UserCog, Users, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { eventInitials } from '@/lib/format';
+import { useProductora } from '@/hooks/useProductora';
 
 export function UserMenu() {
-  const { user, roles, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { productora } = useProductora();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState<string>('');
 
@@ -31,7 +33,6 @@ export function UserMenu() {
 
   const email = user.email ?? '';
   const displayName = fullName || (user.user_metadata as any)?.full_name || email.split('@')[0] || 'Mi cuenta';
-  const isOrganizer = roles.includes('organizer');
 
   return (
     <DropdownMenu>
