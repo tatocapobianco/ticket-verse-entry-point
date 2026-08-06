@@ -18,16 +18,25 @@ const PublicEventPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<any>(null);
+  const [productora, setProductora] = useState<any>(null);
   const [tickets, setTickets] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       if (!id) return;
-      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,event_number,is_public,status').eq('id', id).maybeSingle();
+      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,event_number,is_public,status,productora_id').eq('id', id).maybeSingle();
       if (!ev) { setError('not_found'); setLoading(false); return; }
       if (ev.status !== 'active') { setError('inactive'); setLoading(false); return; }
       setEvent(ev);
+      if (ev.productora_id) {
+        const { data: prod } = await supabase
+          .from('productoras')
+          .select('nombre,slug,logo_url')
+          .eq('id', ev.productora_id)
+          .maybeSingle();
+        setProductora(prod ?? null);
+      }
       const { data: tts } = await supabase
         .from('ticket_types')
         .select('id,name,price,quantity_total,quantity_sold,status,is_courtesy')
