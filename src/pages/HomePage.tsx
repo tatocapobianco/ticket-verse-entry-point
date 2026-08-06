@@ -65,13 +65,8 @@ const HomePage = () => {
             </Link>
           </div>
           {user ? (
-            <button onClick={() => navigate('/buyer-dashboard')} aria-label="Mi cuenta">
-              <Avatar className="h-9 w-9 border border-border">
-                <AvatarFallback className="brand-gradient-bg text-primary-foreground text-sm font-semibold">
-                  {(user.email ?? 'U')[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </button>
+            <UserMenu />
+
           ) : (
             <Button onClick={() => navigate('/login')} className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
               <LogIn className="h-4 w-4 mr-2" /> Iniciar sesión
