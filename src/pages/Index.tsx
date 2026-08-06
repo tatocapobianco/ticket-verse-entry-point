@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Loader2, Mail, Lock, User, IdCard, Sparkles, Cake } from 'lucide-react';
+import { Loader2, Mail, Lock, User, IdCard, Sparkles, Cake, AlertCircle, MailCheck } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import cupoLogo from '@/assets/cupo-logo.png';
@@ -17,11 +19,50 @@ function safeNext(raw: string | null): string | null {
   return raw;
 }
 
+/** Traduce los errores de autenticación a mensajes claros en español. */
+function authErrorMessage(error: any): string {
+  const raw = (error?.message ?? '').toLowerCase();
+  const code = (error?.code ?? '').toLowerCase();
+
+  if (code === 'user_already_exists' || raw.includes('already registered') || raw.includes('user already')) {
+    return 'Este email ya está registrado. Probá iniciar sesión o recuperar tu contraseña.';
+  }
+  if (raw.includes('known to be weak') || code === 'weak_password') {
+    return 'Esa contraseña es demasiado común o insegura. Usá al menos 8 caracteres combinando letras, números y símbolos.';
+  }
+  if (raw.includes('password should be at least') || raw.includes('at least 6 characters')) {
+    return 'La contraseña es muy corta: usá al menos 6 caracteres.';
+  }
+  if (code === 'invalid_credentials' || raw.includes('invalid login credentials')) {
+    return 'Email/DNI o contraseña incorrectos. Revisá los datos e intentá de nuevo.';
+  }
+  if (raw.includes('email not confirmed') || code === 'email_not_confirmed') {
+    return 'Tu email todavía no está confirmado. Abrí el link que te enviamos para activar tu cuenta.';
+  }
+  if (raw.includes('invalid email') || raw.includes('unable to validate email')) {
+    return 'El email no parece válido. Revisá que esté bien escrito.';
+  }
+  if (code === 'over_email_send_rate_limit' || raw.includes('rate limit') || raw.includes('too many requests')) {
+    return 'Hiciste demasiados intentos seguidos. Esperá unos minutos y volvé a probar.';
+  }
+  if (raw.includes('signups not allowed') || code === 'signup_disabled') {
+    return 'Por el momento los registros están deshabilitados.';
+  }
+  if (raw.includes('failed to fetch') || raw.includes('network')) {
+    return 'No pudimos conectarnos. Revisá tu conexión a internet e intentá otra vez.';
+  }
+  return error?.message || 'Ocurrió un error inesperado. Intentá de nuevo.';
+}
+
+
 const Index = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = safeNext(searchParams.get('next'));
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [confirmSentTo, setConfirmSentTo] = useState<string | null>(null);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '',
@@ -48,10 +89,15 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const fail = (setter: (v: string | null) => void, message: string) => {
+    setter(message);
+    toast.error(message, { duration: 8000 });
+  };
+
   const handleLogin = async () => {
+    setLoginError(null);
     if (!loginData.email || !loginData.password) {
-      toast.error('Completá tu email o DNI y contraseña');
-      return;
+      return fail(setLoginError, 'Completá tu email o DNI y tu contraseña.');
     }
     setLoading(true);
     let emailToUse = loginData.email.trim();
@@ -63,8 +109,7 @@ const Index = () => {
       });
       if (dniErr || !resolvedEmail) {
         setLoading(false);
-        toast.error('No encontramos una cuenta con ese DNI');
-        return;
+        return fail(setLoginError, 'No encontramos una cuenta con ese DNI. Probá con tu email.');
       }
       emailToUse = resolvedEmail as string;
     }
@@ -74,24 +119,35 @@ const Index = () => {
       password: loginData.password,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      const message = authErrorMessage(error);
+      fail(setLoginError, message);
+      const raw = (error.message ?? '').toLowerCase();
+      if (raw.includes('email not confirmed') || error.code === 'email_not_confirmed') {
+        setConfirmSentTo(emailToUse);
+      }
+      return;
+    }
     toast.success('¡Hola de nuevo! 👋');
     navigate(nextPath ?? '/', { replace: true });
   };
 
   const handleRegister = async () => {
+    setRegisterError(null);
     if (!registerData.name || !registerData.email || !registerData.password) {
-      toast.error('Completá nombre, email y contraseña');
-      return;
+      return fail(setRegisterError, 'Completá nombre, email y contraseña.');
     }
     if (registerData.password !== registerData.confirmPassword) {
-      toast.error('Las contraseñas no coinciden');
-      return;
+      return fail(setRegisterError, 'Las contraseñas no coinciden.');
+    }
+    if (registerData.password.length < 8) {
+      return fail(setRegisterError, 'La contraseña debe tener al menos 8 caracteres.');
     }
     setLoading(true);
+    const email = registerData.email.trim();
     const emailRedirectTo = window.location.origin + (nextPath ?? '/');
-    const { error } = await supabase.auth.signUp({
-      email: registerData.email.trim(),
+    const { data, error } = await supabase.auth.signUp({
+      email,
       password: registerData.password,
       options: {
         emailRedirectTo,
@@ -103,10 +159,33 @@ const Index = () => {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success('¡Cuenta creada! Revisá tu email si se pide confirmación.');
+    if (error) return fail(setRegisterError, authErrorMessage(error));
+
+    // Email confirmation enabled: no session until the user clicks the link.
+    if (!data.session) {
+      setConfirmSentTo(email);
+      toast.success('Te enviamos un email de confirmación. Revisá tu bandeja de entrada.', {
+        duration: 8000,
+      });
+      return;
+    }
+    toast.success('¡Cuenta creada! 🎉');
     navigate(nextPath ?? '/', { replace: true });
   };
+
+  const handleResend = async () => {
+    if (!confirmSentTo) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: confirmSentTo,
+      options: { emailRedirectTo: window.location.origin + (nextPath ?? '/') },
+    });
+    setLoading(false);
+    if (error) return toast.error(authErrorMessage(error), { duration: 8000 });
+    toast.success('Te reenviamos el email de confirmación.');
+  };
+
 
   const handleGoogleAuth = async () => {
     const redirectPath = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/';
@@ -130,7 +209,42 @@ const Index = () => {
     </svg>
   );
 
+  if (confirmSentTo) {
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+        <div className="w-full max-w-md glass-card rounded-3xl p-8 text-center">
+          <img src={cupoLogo} alt="Cupo" className="mx-auto h-12 w-auto mb-6" />
+          <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+            <MailCheck className="h-8 w-8" />
+          </div>
+          <h1 className="text-2xl font-bold font-display mb-2">Revisá tu email</h1>
+          <p className="text-muted-foreground mb-6">
+            Te enviamos un email de confirmación a <strong>{confirmSentTo}</strong>. Abrí el link para
+            activar tu cuenta y poder ingresar.
+          </p>
+          <div className="space-y-3">
+            <Button
+              onClick={handleResend}
+              disabled={loading}
+              className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground font-semibold"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reenviar email'}
+            </Button>
+            <Button
+              onClick={() => setConfirmSentTo(null)}
+              variant="outline"
+              className="w-full h-12 rounded-2xl"
+            >
+              Volver a iniciar sesión
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
       {/* Floating decorative blobs */}
       <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/20 blur-3xl" />
@@ -174,6 +288,13 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="login" className="mt-6 space-y-4">
+              {loginError && (
+                <Alert variant="destructive" className="rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{loginError}</AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 onClick={handleGoogleAuth}
                 variant="outline"
@@ -223,6 +344,13 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="register" className="mt-6 space-y-4">
+              {registerError && (
+                <Alert variant="destructive" className="rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{registerError}</AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 onClick={handleGoogleAuth}
                 variant="outline"
