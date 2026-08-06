@@ -86,6 +86,26 @@ const App = () => (
               <ProtectedRoute><PurchaseResult /></ProtectedRoute>
             } />
 
+            {/* Backoffice de administración (sección aparte de la app pública) */}
+            <Route path="/admin" element={<AdminAuthShell />}>
+              <Route index element={<AdminEntry />} />
+              <Route element={<AdminGate />}>
+                <Route element={<AdminLayout />}>
+                  <Route path="metricas" element={<AdminMetrics />} />
+                  <Route path="liquidaciones" element={<AdminSettlements />} />
+                  <Route path="transacciones" element={<AdminTransactions />} />
+                  <Route path="productoras" element={<AdminProductoras />} />
+                  <Route path="eventos" element={<AdminEvents />} />
+                  <Route path="usuarios" element={<AdminUsers />} />
+                  <Route path="soporte" element={<AdminSupport />} />
+                  <Route path="actividad" element={<AdminAudit />} />
+                  <Route path="administradores" element={<AdminManagement />} />
+                  <Route path="buscar" element={<AdminSearch />} />
+                </Route>
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
