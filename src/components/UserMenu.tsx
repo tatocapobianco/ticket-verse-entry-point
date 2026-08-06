@@ -51,9 +51,10 @@ export function UserMenu() {
         <DropdownMenuItem onClick={() => navigate('/buyer-dashboard')} className="cursor-pointer">
           <Ticket className="h-4 w-4 mr-2" /> Mis Tickets
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/buyer-dashboard?tab=perfil')} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => navigate('/buyer-dashboard')} className="cursor-pointer">
           <UserCog className="h-4 w-4 mr-2" /> Mi Perfil
         </DropdownMenuItem>
+
         {isOrganizer && (
           <DropdownMenuItem onClick={() => navigate('/organizer-dashboard')} className="cursor-pointer">
             <Users className="h-4 w-4 mr-2" /> Panel de Organizador
