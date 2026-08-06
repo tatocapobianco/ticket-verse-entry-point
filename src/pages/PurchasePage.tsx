@@ -219,9 +219,17 @@ const PurchasePage = () => {
                 <span className="font-display font-semibold">Total a pagar</span>
                 <span className="font-display font-bold text-2xl">{formatARS(total)}</span>
               </div>
+              {payError && (
+                <Alert variant="destructive" className="rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>No se pudo iniciar el pago</AlertTitle>
+                  <AlertDescription>{payError}</AlertDescription>
+                </Alert>
+              )}
               <Button onClick={handlePay} disabled={processing || secondsLeft === 0} className="w-full h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-base font-display font-semibold" size="lg">
                 {processing ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <CreditCard className="h-5 w-5 mr-2" />}
-                {secondsLeft === 0 ? 'Reserva expirada' : `Pagar ${formatARS(total)}`}
+                {processing ? 'Procesando…' : secondsLeft === 0 ? 'Reserva expirada' : payError ? `Reintentar pago ${formatARS(total)}` : `Pagar ${formatARS(total)}`}
+              </Button>
               </Button>
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5"><Lock className="h-3 w-3" /> Protegido por reCAPTCHA.</p>
 
