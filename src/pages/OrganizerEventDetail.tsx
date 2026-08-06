@@ -232,14 +232,14 @@ const OrganizerEventDetail = () => {
     }
     toast.success(editingTicket ? 'Ticket actualizado' : 'Ticket creado');
     setTicketSheetOpen(false);
-    load();
+    load(false);
   };
 
   const toggleTicketStatus = async (t: TicketTypeRow) => {
     const next = t.status === 'active' ? 'inactive' : 'active';
     const { error } = await supabase.from('ticket_types').update({ status: next }).eq('id', t.id);
     if (error) return toast.error(error.message);
-    load();
+    load(false);
   };
 
   const doDeleteTicket = async () => {
@@ -248,7 +248,7 @@ const OrganizerEventDetail = () => {
     setDeleteTicket(null);
     if (error) return toast.error(error.message);
     toast.success('Ticket eliminado');
-    load();
+    load(false);
   };
 
   const createCourtesy = async () => {
@@ -268,7 +268,7 @@ const OrganizerEventDetail = () => {
     await navigator.clipboard.writeText(url).catch(() => {});
     toast.success('Cortesía creada — link copiado');
     setCForm({ ticket_type_id: '', quantity: '1', label: '' });
-    load();
+    load(false);
   };
 
   const createLink = async () => {
@@ -288,7 +288,7 @@ const OrganizerEventDetail = () => {
     await navigator.clipboard.writeText(url).catch(() => {});
     toast.success('Link creado — copiado');
     setLForm({ ticket_type_id: '', max_uses: '10', label: '' });
-    load();
+    load(false);
   };
 
   const assignRrpp = async () => {
@@ -315,18 +315,18 @@ const OrganizerEventDetail = () => {
     if (error) return toast.error(error.message);
     toast.success('RRPP asignado');
     setErForm({ rrpp_name: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
-    load();
+    load(false);
   };
   const toggleEventRrpp = async (er: EventRrppRow) => {
     const { error } = await supabase.from('event_rrpps').update({ active: !er.active }).eq('id', er.id);
     if (error) return toast.error(error.message);
-    load();
+    load(false);
   };
   const removeEventRrpp = async (er: EventRrppRow) => {
     const { error } = await supabase.from('event_rrpps').delete().eq('id', er.id);
     if (error) return toast.error(error.message);
     toast.success('RRPP removido');
-    load();
+    load(false);
   };
   const copyRrppLink = async (er: EventRrppRow) => {
     const url = `${window.location.origin}/rrpp/${er.link_code}`;
@@ -337,7 +337,7 @@ const OrganizerEventDetail = () => {
   const revoke = async (linkId: string) => {
     const { error } = await supabase.from('courtesy_links').update({ is_active: false }).eq('id', linkId);
     if (error) return toast.error(error.message);
-    toast.success('Revocado'); load();
+    toast.success('Revocado'); load(false);
   };
 
   const copyLink = (code: string) => {
@@ -368,7 +368,7 @@ const OrganizerEventDetail = () => {
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success('Cambios guardados');
-    load();
+    load(false);
   };
 
   const rows = useMemo(() =>
