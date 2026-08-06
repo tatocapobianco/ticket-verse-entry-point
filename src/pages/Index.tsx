@@ -62,7 +62,7 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
-  const [confirmSentTo, setConfirmSentTo] = useState<string | null>(null);
+  
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '',
