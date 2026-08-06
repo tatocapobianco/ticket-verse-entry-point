@@ -8,10 +8,29 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 const SERVICE_FEE = 0.15;
 const RECAPTCHA_MIN_SCORE = 0.5;
 
-async function verifyRecaptcha(token: string, ip: string | null): Promise<boolean> {
+// Config-level reCAPTCHA problems (bad/unregistered domain, missing token,
+// key mismatch) must NOT block a real buyer — we log them loudly instead.
+const CONFIG_ERROR_CODES = [
+  'invalid-input-response',
+  'invalid-input-secret',
+  'missing-input-response',
+  'missing-input-secret',
+  'browser-error',
+  'hostname-mismatch',
+  'invalid-keys',
+  'timeout-or-duplicate',
+];
+
+async function verifyRecaptcha(
+  token: string | null,
+  ip: string | null,
+): Promise<{ ok: boolean; detail: string }> {
   const secret = Deno.env.get('RECAPTCHA_SECRET_KEY');
-  if (!secret) return true; // if not configured, don't block
-  if (!token) return false;
+  if (!secret) return { ok: true, detail: 'recaptcha_not_configured' };
+  if (!token) {
+    console.warn('recaptcha: no token from client (likely invalid domain for site key) — allowing');
+    return { ok: true, detail: 'no_token_allowed' };
+  }
   const params = new URLSearchParams({ secret, response: token });
   if (ip) params.append('remoteip', ip);
   const r = await fetch('https://www.google.com/recaptcha/api/siteverify', {
@@ -19,10 +38,26 @@ async function verifyRecaptcha(token: string, ip: string | null): Promise<boolea
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
   });
-  if (!r.ok) return false;
+  if (!r.ok) {
+    console.warn('recaptcha: siteverify HTTP', r.status, '— allowing');
+    return { ok: true, detail: `siteverify_http_${r.status}` };
+  }
   const j = await r.json();
-  return j.success === true && (typeof j.score !== 'number' || j.score >= RECAPTCHA_MIN_SCORE);
+  console.log('recaptcha siteverify result', JSON.stringify(j));
+  if (j.success === true) {
+    if (typeof j.score === 'number' && j.score < RECAPTCHA_MIN_SCORE) {
+      return { ok: false, detail: `low_score_${j.score}` };
+    }
+    return { ok: true, detail: 'ok' };
+  }
+  const codes: string[] = j['error-codes'] ?? [];
+  if (codes.length === 0 || codes.every((c) => CONFIG_ERROR_CODES.includes(c))) {
+    console.warn('recaptcha: config-level failure', codes.join(','), '— allowing');
+    return { ok: true, detail: `config_error:${codes.join(',')}` };
+  }
+  return { ok: false, detail: `failed:${codes.join(',')}` };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
