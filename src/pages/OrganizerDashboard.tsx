@@ -9,14 +9,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Plus, Calendar, MapPin, Copy, LogOut, Loader2, DollarSign, Users, Wallet,
-  CheckCircle2, ChevronRight, Eye, EyeOff,
+  ChevronRight, Eye, EyeOff, CalendarPlus, Building2, Pencil,
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import cupoLogo from '@/assets/cupo-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { formatEventDate, formatARS } from '@/lib/format';
+import { formatEventDate, formatARS, eventInitials } from '@/lib/format';
 import { validateEventDate, eventDateLimits } from '@/lib/validation';
+import { useProductora } from '@/hooks/useProductora';
+import { ProductoraOnboarding } from '@/components/ProductoraOnboarding';
+import { ProductoraForm } from '@/components/ProductoraForm';
 
 
 type EventRow = {
