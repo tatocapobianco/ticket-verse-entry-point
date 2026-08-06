@@ -8,6 +8,10 @@ import { Search, Calendar, MapPin, Ticket, QrCode, ArrowLeft, Loader2, Mail } fr
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import cupoLogo from '@/assets/cupo-logo.png';
+import { EventCover } from '@/components/EventCover';
+import { UserMenu } from '@/components/UserMenu';
+import { formatEventDate, formatARS } from '@/lib/format';
+
 
 type EventRow = {
   id: string;
