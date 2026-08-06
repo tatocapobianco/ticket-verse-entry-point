@@ -99,11 +99,13 @@ Deno.serve(async (req) => {
     if (!reservation_id) return json({ error: 'reservation_id required' }, 400);
 
     // reCAPTCHA
-    const captchaOk = await verifyRecaptcha(recaptcha_token, ip);
-    if (!captchaOk) {
+    const captcha = await verifyRecaptcha(recaptcha_token ?? null, ip);
+    if (!captcha.ok) {
+      console.error('captcha rejected:', captcha.detail);
       await admin.from('purchase_attempts').insert({ ip, user_id: user.id, success: false });
-      return json({ error: 'captcha_failed', message: 'No pudimos verificar que no seas un bot. Actualizá la página e intentá de nuevo.' }, 400);
+      return json({ error: 'captcha_failed', detail: captcha.detail, message: 'No pudimos verificar que no seas un bot. Actualizá la página e intentá de nuevo.' }, 400);
     }
+
 
     // Load reservation (RLS ensures ownership)
     const { data: reservation, error: resErr } = await supabase
