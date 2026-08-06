@@ -363,9 +363,9 @@ const OrganizerEventDetail = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-bg">
-      <header className="glass-card border-b border-border/60 sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate('/organizer-dashboard')} className="rounded-full">
             <ArrowLeft className="h-4 w-4 mr-1" /> Volver
           </Button>
@@ -376,63 +376,74 @@ const OrganizerEventDetail = () => {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Event summary */}
-        <Card className="glass-card border-border/60 rounded-2xl">
-          <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle className="font-display text-2xl">{ev.name}</CardTitle>
-                <CardDescription className="mt-2 space-y-1">
-                  <span className="flex items-center gap-2 text-sm"><Calendar className="h-3.5 w-3.5" />{formatEventDate(ev.event_date, ev.event_time)}</span>
-                  {ev.location && <span className="flex items-center gap-2 text-sm"><MapPin className="h-3.5 w-3.5" />{ev.location}</span>}
-                </CardDescription>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {ev.status !== 'active' && <Badge variant="secondary">Inactivo</Badge>}
-                {!ev.is_public && <Badge variant="outline">Privado</Badge>}
-              </div>
+      {/* Event hero */}
+      <section className="relative overflow-hidden">
+        <div className="relative min-h-[220px]">
+          {ev.image_url ? (
+            <div className="absolute inset-0" style={{ backgroundImage: `url(${ev.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          ) : (
+            <div className="absolute inset-0 brand-hero-gradient" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/50 to-foreground/20" />
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {ev.status !== 'active' && <Badge variant="secondary">Inactivo</Badge>}
+              {!ev.is_public && <Badge variant="secondary">Privado</Badge>}
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-3 rounded-xl bg-secondary/40">
-                <p className="text-xs text-muted-foreground">Vendidas</p>
-                <p className="text-lg font-bold">{totalSold}{totalStock ? ` / ${totalStock}` : ''}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-secondary/40">
-                <p className="text-xs text-muted-foreground">Ingresos</p>
-                <p className="text-lg font-bold">{formatARS(revenueTotal)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-secondary/40">
-                <p className="text-xs text-muted-foreground">Tipos de ticket</p>
-                <p className="text-lg font-bold">{tickets.length}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-secondary/40">
-                <p className="text-xs text-muted-foreground">Clave del escáner</p>
-                <div className="flex items-center gap-1">
-                  <p className="text-sm font-mono flex-1 truncate">{showKey ? ev.access_key : '••••••••'}</p>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setShowKey(v => !v)}>
-                    {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={copyAccessKey}>
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-primary-foreground drop-shadow">{ev.name}</h2>
+            <div className="flex flex-wrap gap-3 text-sm text-primary-foreground/90">
+              <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" />{formatEventDate(ev.event_date, ev.event_time)}</span>
+              {ev.location && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{ev.location}</span>}
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-card/95 px-4 py-1.5 text-sm">
+                <span className="text-muted-foreground">Vendidas </span>
+                <span className="font-display font-bold">{totalSold}{totalStock ? ` / ${totalStock}` : ''}</span>
+              </span>
+              <span className="rounded-full bg-card/95 px-4 py-1.5 text-sm">
+                <span className="text-muted-foreground">Ingresos </span>
+                <span className="font-display font-bold">{formatARS(revenueTotal)}</span>
+              </span>
+              <span className="rounded-full bg-card/95 px-4 py-1.5 text-sm">
+                <span className="text-muted-foreground">Tipos </span>
+                <span className="font-display font-bold">{tickets.length}</span>
+              </span>
+              <span className="rounded-full bg-card/95 px-4 py-1.5 text-sm flex items-center gap-1">
+                <span className="text-muted-foreground">Clave escáner</span>
+                <span className="font-mono">{showKey ? ev.access_key : '••••••'}</span>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setShowKey(v => !v)}>
+                  {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={copyAccessKey}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <Tabs defaultValue="tickets" className="w-full">
-          <TabsList className="w-full flex overflow-x-auto whitespace-nowrap rounded-2xl h-auto justify-start">
-            <TabsTrigger value="tickets" className="rounded-2xl shrink-0"><Ticket className="h-4 w-4 mr-1" />Tickets</TabsTrigger>
-            <TabsTrigger value="courtesy" className="rounded-2xl shrink-0"><Gift className="h-4 w-4 mr-1" />Cortesías</TabsTrigger>
-            <TabsTrigger value="links" className="rounded-2xl shrink-0"><LinkIcon className="h-4 w-4 mr-1" />Links únicos</TabsTrigger>
-            <TabsTrigger value="rrpps" className="rounded-2xl shrink-0"><Megaphone className="h-4 w-4 mr-1" />RRPPs</TabsTrigger>
-            <TabsTrigger value="stats" className="rounded-2xl shrink-0"><BarChart3 className="h-4 w-4 mr-1" />Estadísticas</TabsTrigger>
-            <TabsTrigger value="settings" className="rounded-2xl shrink-0"><Settings className="h-4 w-4 mr-1" />Configuración</TabsTrigger>
+          <TabsList className="w-full flex overflow-x-auto whitespace-nowrap rounded-2xl h-auto justify-start bg-card p-1.5 soft-shadow">
+            {[
+              { v: 'tickets', label: 'Tickets', Icon: Ticket },
+              { v: 'courtesy', label: 'Cortesías', Icon: Gift },
+              { v: 'links', label: 'Links únicos', Icon: LinkIcon },
+              { v: 'rrpps', label: 'RRPPs', Icon: Megaphone },
+              { v: 'stats', label: 'Estadísticas', Icon: BarChart3 },
+              { v: 'settings', label: 'Configuración', Icon: Settings },
+            ].map(({ v, label, Icon }) => (
+              <TabsTrigger
+                key={v}
+                value={v}
+                className="rounded-xl shrink-0 transition-colors data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none font-display"
+              >
+                <Icon className="h-4 w-4 mr-1.5" />{label}
+              </TabsTrigger>
+            ))}
           </TabsList>
+
 
           {/* TICKETS */}
           <TabsContent value="tickets" className="mt-4">
