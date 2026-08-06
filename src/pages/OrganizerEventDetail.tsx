@@ -25,6 +25,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
 import { validateEventDate, eventDateLimits } from '@/lib/validation';
+import { EventImageField } from '@/components/EventImageField';
+import { uploadEventImage, deleteEventImage, pathFromEventImageUrl } from '@/lib/eventImage';
 
 const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
 const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
@@ -63,6 +65,7 @@ const OrganizerEventDetail = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('tickets');
   const [ev, setEv] = useState<EventRow | null>(null);
   const [tickets, setTickets] = useState<TicketTypeRow[]>([]);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
@@ -98,10 +101,13 @@ const OrganizerEventDetail = () => {
     name: '', description: '', location: '', date: '', time: '',
     is_public: true, status: 'active',
   });
+  // Imagen del evento: URL guardada + cambio pendiente (blob a subir, o null = borrar)
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [pendingImage, setPendingImage] = useState<{ previewUrl: string; blob: Blob } | null | undefined>(undefined);
 
-  const load = async () => {
+  const load = async (spinner = true) => {
     if (!id || !user) return;
-    setLoading(true);
+    if (spinner) setLoading(true);
     const { data: evd, error: evErr } = await supabase
       .from('events').select(EVENT_COLS).eq('id', id).maybeSingle();
     if (evErr || !evd) {
@@ -115,6 +121,8 @@ const OrganizerEventDetail = () => {
       return;
     }
     setEv(evd as EventRow);
+    setImageUrl((evd as EventRow).image_url ?? null);
+    setPendingImage(undefined);
     setSForm({
       name: evd.name, description: evd.description ?? '', location: evd.location ?? '',
       date: evd.event_date ?? '', time: (evd.event_time ?? '').slice(0, 5),
@@ -226,14 +234,14 @@ const OrganizerEventDetail = () => {
     }
     toast.success(editingTicket ? 'Ticket actualizado' : 'Ticket creado');
     setTicketSheetOpen(false);
-    load();
+    load(false);
   };
 
   const toggleTicketStatus = async (t: TicketTypeRow) => {
     const next = t.status === 'active' ? 'inactive' : 'active';
     const { error } = await supabase.from('ticket_types').update({ status: next }).eq('id', t.id);
     if (error) return toast.error(error.message);
-    load();
+    load(false);
   };
 
   const doDeleteTicket = async () => {
@@ -242,7 +250,7 @@ const OrganizerEventDetail = () => {
     setDeleteTicket(null);
     if (error) return toast.error(error.message);
     toast.success('Ticket eliminado');
-    load();
+    load(false);
   };
 
   const createCourtesy = async () => {
@@ -262,7 +270,7 @@ const OrganizerEventDetail = () => {
     await navigator.clipboard.writeText(url).catch(() => {});
     toast.success('Cortesía creada — link copiado');
     setCForm({ ticket_type_id: '', quantity: '1', label: '' });
-    load();
+    load(false);
   };
 
   const createLink = async () => {
@@ -282,7 +290,7 @@ const OrganizerEventDetail = () => {
     await navigator.clipboard.writeText(url).catch(() => {});
     toast.success('Link creado — copiado');
     setLForm({ ticket_type_id: '', max_uses: '10', label: '' });
-    load();
+    load(false);
   };
 
   const assignRrpp = async () => {
@@ -309,18 +317,18 @@ const OrganizerEventDetail = () => {
     if (error) return toast.error(error.message);
     toast.success('RRPP asignado');
     setErForm({ rrpp_name: '', max_tickets: '', max_courtesies: '0', link_type: 'general' });
-    load();
+    load(false);
   };
   const toggleEventRrpp = async (er: EventRrppRow) => {
     const { error } = await supabase.from('event_rrpps').update({ active: !er.active }).eq('id', er.id);
     if (error) return toast.error(error.message);
-    load();
+    load(false);
   };
   const removeEventRrpp = async (er: EventRrppRow) => {
     const { error } = await supabase.from('event_rrpps').delete().eq('id', er.id);
     if (error) return toast.error(error.message);
     toast.success('RRPP removido');
-    load();
+    load(false);
   };
   const copyRrppLink = async (er: EventRrppRow) => {
     const url = `${window.location.origin}/rrpp/${er.link_code}`;
@@ -331,7 +339,7 @@ const OrganizerEventDetail = () => {
   const revoke = async (linkId: string) => {
     const { error } = await supabase.from('courtesy_links').update({ is_active: false }).eq('id', linkId);
     if (error) return toast.error(error.message);
-    toast.success('Revocado'); load();
+    toast.success('Revocado'); load(false);
   };
 
   const copyLink = (code: string) => {
@@ -347,32 +355,62 @@ const OrganizerEventDetail = () => {
   };
 
   const saveSettings = async () => {
-    if (!ev) return;
+    if (!ev || !user) return;
     if (sForm.date) {
       const dateError = validateEventDate(sForm.date);
       if (dateError) { toast.error(dateError); return; }
     }
     setSaving(true);
+
+    // Resolver el cambio de imagen: undefined = sin cambios, null = borrar, objeto = reemplazar
+    let nextImageUrl = imageUrl;
+    if (pendingImage !== undefined) {
+      const oldPath = pathFromEventImageUrl(imageUrl);
+      if (pendingImage === null) {
+        nextImageUrl = null;
+      } else {
+        try {
+          nextImageUrl = (await uploadEventImage(pendingImage.blob, user.id)).url;
+        } catch (e: any) {
+          setSaving(false);
+          toast.error(e?.message ?? 'No se pudo subir la imagen');
+          return;
+        }
+      }
+      await deleteEventImage(oldPath);
+    }
+
     const { error } = await supabase.from('events').update({
       name: sForm.name, description: sForm.description || null,
       location: sForm.location || null,
       event_date: sForm.date || null, event_time: sForm.time || null,
+      image_url: nextImageUrl,
       is_public: sForm.is_public, status: sForm.status,
     }).eq('id', ev.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success('Cambios guardados');
-    load();
+    load(false);
   };
+
+  /** Cortesías generadas (cupos creados en links) por tipo de ticket. */
+  const generatedByTicket = useMemo(() => {
+    const acc: Record<string, number> = {};
+    links.forEach((l) => {
+      acc[l.ticket_type_id] = (acc[l.ticket_type_id] || 0) + l.max_uses;
+    });
+    return acc;
+  }, [links]);
 
   const rows = useMemo(() =>
     tickets.map((t) => {
-      const sent = courtesyByTicket[t.id] || 0;
+      const generated = generatedByTicket[t.id] || 0;
+      const used = courtesyByTicket[t.id] || 0;
       const scanned = scannedByTicket[t.id] || 0;
       const total = t.quantity_total ?? 0;
-      const overflow = total > 0 && (t.quantity_sold + sent) > total;
-      return { t, sent, scanned, total, overflow };
-    }), [tickets, courtesyByTicket, scannedByTicket]);
+      const overflow = total > 0 && (t.quantity_sold + generated) > total;
+      return { t, generated, used, scanned, total, overflow };
+    }), [tickets, generatedByTicket, courtesyByTicket, scannedByTicket]);
 
   if (loading || !ev) {
     return (
@@ -444,7 +482,7 @@ const OrganizerEventDetail = () => {
       </section>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        <Tabs defaultValue="tickets" className="w-full">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full flex overflow-x-auto whitespace-nowrap rounded-2xl h-auto justify-start bg-card p-1.5 soft-shadow">
             {[
               { v: 'tickets', label: 'Tickets', Icon: Ticket },
@@ -735,28 +773,30 @@ const OrganizerEventDetail = () => {
               <CardContent className="space-y-3">
                 {rows.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Sin datos aún.</p>
-                ) : rows.map(({ t, sent, scanned, total, overflow }) => (
+                ) : rows.map(({ t, generated, used, scanned, total, overflow }) => (
                   <div key={t.id} className="p-4 rounded-2xl bg-secondary/30 space-y-1">
                     <div className="flex items-center justify-between">
                       <p className="font-semibold">{t.name}</p>
                       {overflow && <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Excede stock</Badge>}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
                       <div><p className="text-muted-foreground">Vendidas</p><p className="font-bold text-sm">{t.quantity_sold}</p></div>
                       <div><p className="text-muted-foreground">Ingresos</p><p className="font-bold text-sm">{formatARS(t.quantity_sold * Number(t.price))}</p></div>
-                      <div><p className="text-muted-foreground">Cortesías enviadas</p><p className="font-bold text-sm">{sent}</p></div>
+                      <div><p className="text-muted-foreground">Cortesías generadas</p><p className="font-bold text-sm">{generated}</p></div>
+                      <div><p className="text-muted-foreground">Cortesías usadas</p><p className="font-bold text-sm">{used}</p></div>
                       <div><p className="text-muted-foreground">Escaneadas</p><p className="font-bold text-sm">{scanned}</p></div>
-                      {total > 0 && <div className="col-span-2 md:col-span-4"><p className="text-muted-foreground">Disponibles</p><p className="font-bold text-sm">{Math.max(0, total - t.quantity_sold - sent)} / {total}</p></div>}
+                      {total > 0 && <div className="col-span-2 md:col-span-5"><p className="text-muted-foreground">Disponibles</p><p className="font-bold text-sm">{Math.max(0, total - t.quantity_sold - generated)} / {total}</p></div>}
                     </div>
                   </div>
                 ))}
                 {rows.length > 0 && (
                   <div className="p-4 rounded-2xl brand-gradient-bg text-primary-foreground">
                     <p className="text-xs opacity-90">Total del evento</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mt-1">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm mt-1">
                       <div><p className="opacity-90">Vendidas</p><p className="font-bold text-base">{totalSold}</p></div>
                       <div><p className="opacity-90">Ingresos</p><p className="font-bold text-base">{formatARS(revenueTotal)}</p></div>
-                      <div><p className="opacity-90">Cortesías</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.sent, 0)}</p></div>
+                      <div><p className="opacity-90">Cortesías generadas</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.generated, 0)}</p></div>
+                      <div><p className="opacity-90">Cortesías usadas</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.used, 0)}</p></div>
                       <div><p className="opacity-90">Escaneadas</p><p className="font-bold text-base">{rows.reduce((a, r) => a + r.scanned, 0)}</p></div>
                     </div>
                   </div>
@@ -780,6 +820,11 @@ const OrganizerEventDetail = () => {
                   <div><Label>Hora</Label><Input type="time" value={sForm.time} onChange={(e) => setSForm({ ...sForm, time: e.target.value })} className="rounded-2xl" /></div>
                 </div>
                 <div><Label>Lugar</Label><Input value={sForm.location} onChange={(e) => setSForm({ ...sForm, location: e.target.value })} className="rounded-2xl" /></div>
+                <EventImageField
+                  value={pendingImage === undefined ? imageUrl : (pendingImage?.previewUrl ?? null)}
+                  onChange={setPendingImage}
+                  eventName={sForm.name || ev.name}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Visibilidad</Label>

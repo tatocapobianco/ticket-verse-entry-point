@@ -21,6 +21,8 @@ import { validateEventDate, eventDateLimits } from '@/lib/validation';
 import { useProductora } from '@/hooks/useProductora';
 import { ProductoraOnboarding } from '@/components/ProductoraOnboarding';
 import { ProductoraForm } from '@/components/ProductoraForm';
+import { EventImageField } from '@/components/EventImageField';
+import { uploadEventImage } from '@/lib/eventImage';
 
 
 type EventRow = {
@@ -52,6 +54,7 @@ const OrganizerDashboard = () => {
   const dateLimits = eventDateLimits();
 
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
+  const [newImage, setNewImage] = useState<{ previewUrl: string; blob: Blob } | null>(null);
 
   const load = async () => {
     if (!user) return;
@@ -82,11 +85,22 @@ const OrganizerDashboard = () => {
     if (dateError) { toast.error(dateError); return; }
     if (!user) return;
     setSaving(true);
+    let imageUrl: string | null = null;
+    if (newImage) {
+      try {
+        imageUrl = (await uploadEventImage(newImage.blob, user.id)).url;
+      } catch (e: any) {
+        setSaving(false);
+        toast.error(e?.message ?? 'No se pudo subir la imagen');
+        return;
+      }
+    }
     const { error } = await supabase.from('events').insert({
       organizer_id: user.id, name: newEvent.name, description: newEvent.description || null,
       event_date: newEvent.date, event_time: newEvent.time, location: newEvent.location,
       event_number: genCode('EVT', 6), access_key: genCode('', 8).toLowerCase(),
       productora_id: productora?.id ?? null,
+      image_url: imageUrl,
       is_public: newEvent.is_public, status: newEvent.status,
     });
     setSaving(false);
@@ -94,6 +108,7 @@ const OrganizerDashboard = () => {
     toast.success('Evento creado');
     setShowCreateEvent(false);
     setNewEvent({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
+    setNewImage(null);
     load();
   };
 
@@ -301,7 +316,7 @@ const OrganizerDashboard = () => {
 
       {/* Create event dialog */}
       <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nuevo evento</DialogTitle>
             <DialogDescription>Completá los datos principales. Podés editar el resto después.</DialogDescription>
@@ -320,6 +335,11 @@ const OrganizerDashboard = () => {
               <div><Label>Hora *</Label><Input type="time" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} className="rounded-2xl" /></div>
             </div>
             <div><Label>Lugar *</Label><Input value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} className="rounded-2xl" /></div>
+            <EventImageField
+              value={newImage?.previewUrl ?? null}
+              onChange={setNewImage}
+              eventName={newEvent.name}
+            />
             <div>
               <Label>Visibilidad</Label>
               <select value={newEvent.is_public ? 'public' : 'private'} onChange={(e) => setNewEvent({ ...newEvent, is_public: e.target.value === 'public' })} className="w-full rounded-2xl border border-input bg-background h-10 px-3 text-sm">
