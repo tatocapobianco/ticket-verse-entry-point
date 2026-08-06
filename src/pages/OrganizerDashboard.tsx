@@ -21,6 +21,8 @@ import { validateEventDate, eventDateLimits } from '@/lib/validation';
 import { useProductora } from '@/hooks/useProductora';
 import { ProductoraOnboarding } from '@/components/ProductoraOnboarding';
 import { ProductoraForm } from '@/components/ProductoraForm';
+import { EventImageField } from '@/components/EventImageField';
+import { uploadEventImage } from '@/lib/eventImage';
 
 
 type EventRow = {
@@ -52,6 +54,7 @@ const OrganizerDashboard = () => {
   const dateLimits = eventDateLimits();
 
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
+  const [newImage, setNewImage] = useState<{ previewUrl: string; blob: Blob } | null>(null);
 
   const load = async () => {
     if (!user) return;
