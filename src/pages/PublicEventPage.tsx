@@ -193,13 +193,18 @@ const PublicEventPage = () => {
                 <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap">
                   <div>
                     <p className="font-display font-semibold text-lg">{t.name}</p>
+                    {t.description && (
+                      <p className="text-sm text-muted-foreground mt-0.5">{t.description}</p>
+                    )}
                     <p className="font-display font-bold text-2xl mt-1">{formatARS(t.price)}</p>
                     {!sold && left !== null && left <= 10 && (
-                      <p className="text-xs text-accent font-medium mt-1">Quedan {left}</p>
+                      <p className="text-xs text-accent font-semibold mt-1">
+                        Últimas {left} {left === 1 ? 'entrada' : 'entradas'}
+                      </p>
                     )}
                   </div>
                   {sold ? (
-                    <Button disabled variant="secondary" className="rounded-full">Agotado</Button>
+                    <span className="text-sm font-display font-semibold text-muted-foreground px-4">Agotado</span>
                   ) : authLoading ? (
                     <Button disabled variant="secondary" className="rounded-full"><Loader2 className="h-4 w-4 animate-spin" /></Button>
                   ) : !user ? (
