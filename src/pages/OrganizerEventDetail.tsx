@@ -63,6 +63,7 @@ const OrganizerEventDetail = () => {
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('tickets');
   const [ev, setEv] = useState<EventRow | null>(null);
   const [tickets, setTickets] = useState<TicketTypeRow[]>([]);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
