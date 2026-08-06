@@ -85,11 +85,22 @@ const OrganizerDashboard = () => {
     if (dateError) { toast.error(dateError); return; }
     if (!user) return;
     setSaving(true);
+    let imageUrl: string | null = null;
+    if (newImage) {
+      try {
+        imageUrl = (await uploadEventImage(newImage.blob, user.id)).url;
+      } catch (e: any) {
+        setSaving(false);
+        toast.error(e?.message ?? 'No se pudo subir la imagen');
+        return;
+      }
+    }
     const { error } = await supabase.from('events').insert({
       organizer_id: user.id, name: newEvent.name, description: newEvent.description || null,
       event_date: newEvent.date, event_time: newEvent.time, location: newEvent.location,
       event_number: genCode('EVT', 6), access_key: genCode('', 8).toLowerCase(),
       productora_id: productora?.id ?? null,
+      image_url: imageUrl,
       is_public: newEvent.is_public, status: newEvent.status,
     });
     setSaving(false);
@@ -97,6 +108,7 @@ const OrganizerDashboard = () => {
     toast.success('Evento creado');
     setShowCreateEvent(false);
     setNewEvent({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
+    setNewImage(null);
     load();
   };
 
