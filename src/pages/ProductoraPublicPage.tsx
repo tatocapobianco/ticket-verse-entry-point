@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, AlertCircle, Instagram, Calendar, MapPin } from 'lucide-react';
+import { Loader2, AlertCircle, Calendar, MapPin } from 'lucide-react';
 import cupoLogo from '@/assets/cupo-logo.png';
 import { EventCover } from '@/components/EventCover';
 import { formatEventDate, eventInitials } from '@/lib/format';
@@ -58,8 +58,6 @@ const ProductoraPublicPage = () => {
     );
   }
 
-  const instagram: string | null = null;
-
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md border-b border-border">
@@ -78,11 +76,6 @@ const ProductoraPublicPage = () => {
             <h1 className="font-display font-bold text-2xl sm:text-3xl text-primary-foreground">{productora.nombre}</h1>
             {productora.descripcion && (
               <p className="text-primary-foreground/85 text-sm mt-1">{productora.descripcion}</p>
-            )}
-            {instagram && (
-              <p className="text-primary-foreground/85 text-sm mt-1 flex items-center gap-1">
-                <Instagram className="h-4 w-4" /> {instagram}
-              </p>
             )}
           </div>
         </div>
