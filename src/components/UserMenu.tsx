@@ -56,11 +56,12 @@ export function UserMenu() {
           <UserCog className="h-4 w-4 mr-2" /> Mi Perfil
         </DropdownMenuItem>
 
-        {isOrganizer && (
-          <DropdownMenuItem onClick={() => navigate('/organizer-dashboard')} className="cursor-pointer">
-            <Users className="h-4 w-4 mr-2" /> Panel de Organizador
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => navigate('/organizer')} className="cursor-pointer">
+          <Users className="h-4 w-4 mr-2 shrink-0" />
+          <span className="truncate">
+            {productora ? `Panel de ${productora.nombre}` : 'Panel de Organizador'}
+          </span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={async () => { await signOut(); navigate('/'); }}
