@@ -100,22 +100,44 @@ const Index = () => {
       return fail(setLoginError, 'Completá tu email o DNI y tu contraseña.');
     }
     setLoading(true);
-    let emailToUse = loginData.email.trim();
+    const identifier = loginData.email.trim();
 
-    // If it looks like a DNI (only digits), look up the associated email
-    if (/^\d{6,12}$/.test(emailToUse)) {
-      const { data: resolvedEmail, error: dniErr } = await supabase.rpc('email_for_dni', {
-        _dni: emailToUse,
+    // DNI login is resolved server-side (the email is never exposed to the browser)
+    if (/^\d{6,12}$/.test(identifier)) {
+      const { data, error } = await supabase.functions.invoke('dni-login', {
+        body: { dni: identifier, password: loginData.password },
       });
-      if (dniErr || !resolvedEmail) {
-        setLoading(false);
-        return fail(setLoginError, 'No encontramos una cuenta con ese DNI. Probá con tu email.');
+      let errorCode: string | null = (data as any)?.error ?? null;
+      if (error) {
+        try {
+          errorCode = (await (error as any).context?.json())?.error ?? 'invalid_credentials';
+        } catch {
+          errorCode = 'invalid_credentials';
+        }
       }
-      emailToUse = resolvedEmail as string;
+      if (errorCode || !(data as any)?.access_token) {
+        setLoading(false);
+        if (errorCode === 'email_not_confirmed') {
+          return fail(
+            setLoginError,
+            'Tu email todavía no está confirmado. Abrí el link que te enviamos para activar tu cuenta.',
+          );
+        }
+        return fail(setLoginError, 'DNI o contraseña incorrectos. Revisá los datos e intentá de nuevo.');
+      }
+      const { error: sessionErr } = await supabase.auth.setSession({
+        access_token: (data as any).access_token,
+        refresh_token: (data as any).refresh_token,
+      });
+      setLoading(false);
+      if (sessionErr) return fail(setLoginError, authErrorMessage(sessionErr));
+      toast.success('¡Hola de nuevo! 👋');
+      navigate(nextPath ?? '/', { replace: true });
+      return;
     }
 
     const { error } = await supabase.auth.signInWithPassword({
-      email: emailToUse,
+      email: identifier,
       password: loginData.password,
     });
     setLoading(false);
@@ -124,10 +146,11 @@ const Index = () => {
       fail(setLoginError, message);
       const raw = (error.message ?? '').toLowerCase();
       if (raw.includes('email not confirmed') || error.code === 'email_not_confirmed') {
-        setConfirmSentTo(emailToUse);
+        setConfirmSentTo(identifier);
       }
       return;
     }
+
     toast.success('¡Hola de nuevo! 👋');
     navigate(nextPath ?? '/', { replace: true });
   };
