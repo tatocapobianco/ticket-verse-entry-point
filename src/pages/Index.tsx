@@ -17,6 +17,42 @@ function safeNext(raw: string | null): string | null {
   return raw;
 }
 
+/** Traduce los errores de autenticación a mensajes claros en español. */
+function authErrorMessage(error: any): string {
+  const raw = (error?.message ?? '').toLowerCase();
+  const code = (error?.code ?? '').toLowerCase();
+
+  if (code === 'user_already_exists' || raw.includes('already registered') || raw.includes('user already')) {
+    return 'Este email ya está registrado. Probá iniciar sesión o recuperar tu contraseña.';
+  }
+  if (raw.includes('known to be weak') || code === 'weak_password') {
+    return 'Esa contraseña es demasiado común o insegura. Usá al menos 8 caracteres combinando letras, números y símbolos.';
+  }
+  if (raw.includes('password should be at least') || raw.includes('at least 6 characters')) {
+    return 'La contraseña es muy corta: usá al menos 6 caracteres.';
+  }
+  if (code === 'invalid_credentials' || raw.includes('invalid login credentials')) {
+    return 'Email/DNI o contraseña incorrectos. Revisá los datos e intentá de nuevo.';
+  }
+  if (raw.includes('email not confirmed') || code === 'email_not_confirmed') {
+    return 'Tu email todavía no está confirmado. Abrí el link que te enviamos para activar tu cuenta.';
+  }
+  if (raw.includes('invalid email') || raw.includes('unable to validate email')) {
+    return 'El email no parece válido. Revisá que esté bien escrito.';
+  }
+  if (code === 'over_email_send_rate_limit' || raw.includes('rate limit') || raw.includes('too many requests')) {
+    return 'Hiciste demasiados intentos seguidos. Esperá unos minutos y volvé a probar.';
+  }
+  if (raw.includes('signups not allowed') || code === 'signup_disabled') {
+    return 'Por el momento los registros están deshabilitados.';
+  }
+  if (raw.includes('failed to fetch') || raw.includes('network')) {
+    return 'No pudimos conectarnos. Revisá tu conexión a internet e intentá otra vez.';
+  }
+  return error?.message || 'Ocurrió un error inesperado. Intentá de nuevo.';
+}
+
+
 const Index = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
