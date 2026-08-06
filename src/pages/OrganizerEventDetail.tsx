@@ -70,6 +70,8 @@ const OrganizerEventDetail = () => {
   const [courtesyByTicket, setCourtesyByTicket] = useState<Record<string, number>>({});
   const [revenueTotal, setRevenueTotal] = useState(0);
   const [showKey, setShowKey] = useState(false);
+  const [accessKey, setAccessKey] = useState<string | null>(null);
+
 
   // rrpps
   const [rrpps, setRrpps] = useState<RrppRow[]>([]);
@@ -100,7 +102,7 @@ const OrganizerEventDetail = () => {
     if (!id || !user) return;
     setLoading(true);
     const { data: evd, error: evErr } = await supabase
-      .from('events').select('*').eq('id', id).maybeSingle();
+      .from('events').select(EVENT_COLS).eq('id', id).maybeSingle();
     if (evErr || !evd) {
       toast.error('Evento no encontrado');
       navigate('/organizer-dashboard');
@@ -117,12 +119,15 @@ const OrganizerEventDetail = () => {
       date: evd.event_date ?? '', time: (evd.event_time ?? '').slice(0, 5),
       is_public: evd.is_public, status: evd.status,
     });
+    const { data: ak } = await supabase.rpc('get_event_access_key', { _event_id: id });
+    setAccessKey((ak as string | null) ?? null);
 
     const ttRes = await supabase
       .from('ticket_types')
-      .select('*')
+      .select(TT_COLS)
       .eq('event_id', id)
       .order('created_at');
+
     if (ttRes.error) {
       setTicketsError(ttRes.error.message);
       setTickets([]);
