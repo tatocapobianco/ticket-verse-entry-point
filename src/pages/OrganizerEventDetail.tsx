@@ -771,7 +771,7 @@ const OrganizerEventDetail = () => {
                 <div><Label>Nombre</Label><Input value={sForm.name} onChange={(e) => setSForm({ ...sForm, name: e.target.value })} className="rounded-2xl" /></div>
                 <div><Label>Descripción</Label><Textarea value={sForm.description} onChange={(e) => setSForm({ ...sForm, description: e.target.value })} className="rounded-2xl" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Fecha</Label><Input type="date" value={sForm.date} onChange={(e) => setSForm({ ...sForm, date: e.target.value })} className="rounded-2xl" /></div>
+                  <div><Label>Fecha</Label><Input type="date" min={eventDateLimits().min} max={eventDateLimits().max} value={sForm.date} onChange={(e) => setSForm({ ...sForm, date: e.target.value })} className="rounded-2xl" /></div>
                   <div><Label>Hora</Label><Input type="time" value={sForm.time} onChange={(e) => setSForm({ ...sForm, time: e.target.value })} className="rounded-2xl" /></div>
                 </div>
                 <div><Label>Lugar</Label><Input value={sForm.location} onChange={(e) => setSForm({ ...sForm, location: e.target.value })} className="rounded-2xl" /></div>
