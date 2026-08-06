@@ -116,8 +116,8 @@ const BuyerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg">
-      <header className="bg-white/70 backdrop-blur-md border-b border-border sticky top-0 z-20">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -125,7 +125,6 @@ const BuyerDashboard = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <img src={cupoLogo} alt="Cupo" className="h-8 w-auto" />
-              <Badge variant="secondary" className="rounded-full hidden sm:inline-flex">Mis Eventos</Badge>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -142,7 +141,7 @@ const BuyerDashboard = () => {
               >
                 Mis Tickets
               </Button>
-              <Button variant="ghost" onClick={handleLogout} className="rounded-full hidden sm:inline-flex">Salir</Button>
+              <UserMenu />
             </div>
           </div>
         </div>
@@ -158,7 +157,7 @@ const BuyerDashboard = () => {
                   placeholder="Buscar eventos por nombre o ubicación..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 rounded-2xl"
                 />
               </div>
             </div>
@@ -168,55 +167,44 @@ const BuyerDashboard = () => {
             ) : filteredEvents.length === 0 ? (
               <p className="text-center text-muted-foreground py-16">No hay eventos disponibles.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredEvents.map((event) => {
                   const sellable = (event.ticket_types ?? []).filter(t => !t.is_courtesy);
                   return (
-                    <Card key={event.id} className="rounded-3xl overflow-hidden border-border/70 soft-shadow hover:startup-shadow hover:-translate-y-1 transition-all duration-300">
-                      <CardHeader>
-                        <img
-                          src={event.image_url || '/placeholder.svg'}
-                          alt={event.name}
-                          className="w-full h-48 object-cover rounded-t-lg"
-                        />
-                        <CardTitle className="text-lg">{event.name}</CardTitle>
-                        <CardDescription>{event.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 mb-4">
-                          {event.event_date && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              {event.event_date}{event.event_time ? ` - ${event.event_time}` : ''}
-                            </div>
-                          )}
-                          {event.location && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4 mr-2" />
-                              {event.location}
-                            </div>
-                          )}
-                        </div>
+                    <Card key={event.id} className="rounded-2xl overflow-hidden border-border soft-shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                      <EventCover name={event.name} imageUrl={event.image_url} date={event.event_date} />
+                      <CardContent className="p-5 space-y-2">
+                        <h3 className="font-display font-bold text-lg line-clamp-2">{event.name}</h3>
+                        {event.event_date && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" /> {formatEventDate(event.event_date, event.event_time)}
+                          </p>
+                        )}
+                        {event.location && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5" /> {event.location}
+                          </p>
+                        )}
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 pt-2">
                           {sellable.length === 0 && (
                             <p className="text-sm text-muted-foreground">Sin tickets disponibles.</p>
                           )}
                           {sellable.map((ticket) => {
                             const soldOut = ticket.status === 'sold_out' || ticket.status === 'inactive';
                             return (
-                              <div key={ticket.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                                <div className="font-medium">{ticket.name}</div>
-                                <div className="text-right">
-                                  <div className="text-lg font-bold">${Number(ticket.price).toLocaleString()}</div>
-                                  {!soldOut ? (
-                                    <Button size="sm" onClick={() => handleBuyTicket(event.id, ticket.id)} className="mt-1 rounded-full brand-gradient-bg text-primary-foreground">
-                                      Comprar
-                                    </Button>
-                                  ) : (
-                                    <div className="text-sm text-muted-foreground mt-1">Agotado</div>
-                                  )}
+                              <div key={ticket.id} className="flex justify-between items-center gap-3 p-3 bg-muted/40 rounded-xl">
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm truncate">{ticket.name}</p>
+                                  <p className="font-display font-bold">{formatARS(ticket.price)}</p>
                                 </div>
+                                {!soldOut ? (
+                                  <Button size="sm" onClick={() => handleBuyTicket(event.id, ticket.id)} className="rounded-full brand-gradient-bg text-primary-foreground shrink-0">
+                                    Comprar
+                                  </Button>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground shrink-0">Agotado</span>
+                                )}
                               </div>
                             );
                           })}
@@ -228,6 +216,7 @@ const BuyerDashboard = () => {
               </div>
             )}
           </>
+
         ) : (
           <>
             <h2 className="text-2xl font-bold font-display mb-6">Mis Tickets</h2>
