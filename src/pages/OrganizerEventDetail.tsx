@@ -103,9 +103,9 @@ const OrganizerEventDetail = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [pendingImage, setPendingImage] = useState<{ previewUrl: string; blob: Blob } | null | undefined>(undefined);
 
-  const load = async () => {
+  const load = async (spinner = true) => {
     if (!id || !user) return;
-    setLoading(true);
+    if (spinner) setLoading(true);
     const { data: evd, error: evErr } = await supabase
       .from('events').select(EVENT_COLS).eq('id', id).maybeSingle();
     if (evErr || !evd) {
@@ -119,6 +119,8 @@ const OrganizerEventDetail = () => {
       return;
     }
     setEv(evd as EventRow);
+    setImageUrl((evd as EventRow).image_url ?? null);
+    setPendingImage(undefined);
     setSForm({
       name: evd.name, description: evd.description ?? '', location: evd.location ?? '',
       date: evd.event_date ?? '', time: (evd.event_time ?? '').slice(0, 5),
