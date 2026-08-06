@@ -25,10 +25,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
 
+const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
+const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
+
 type EventRow = {
-  id: string; name: string; description: string | null;
+  id: string; organizer_id?: string; name: string; description: string | null;
   event_date: string | null; event_time: string | null; location: string | null;
-  event_number: string; access_key: string; is_public: boolean; status: string;
+  event_number: string; is_public: boolean; status: string;
   image_url?: string | null;
 };
 
@@ -36,8 +39,8 @@ type TicketTypeRow = {
   id: string; event_id: string; name: string; description: string | null;
   price: number; quantity_total: number | null; quantity_sold: number;
   status: string; is_courtesy: boolean; requires_auth_code: boolean;
-  authorization_code: string | null;
 };
+
 type CourtesyLinkRow = {
   id: string; event_id: string; ticket_type_id: string; code: string;
   max_uses: number; uses_count: number; is_active: boolean;
