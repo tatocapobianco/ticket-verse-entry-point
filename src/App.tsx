@@ -21,6 +21,7 @@ import MercadoPagoCallback from "./pages/MercadoPagoCallback";
 import PublicEventPage from "./pages/PublicEventPage";
 import OrganizerEventDetail from "./pages/OrganizerEventDetail";
 import RrppRedirectPage from "./pages/RrppRedirectPage";
+import ProductoraPublicPage from "./pages/ProductoraPublicPage";
 
 const queryClient = new QueryClient();
 
