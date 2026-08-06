@@ -853,6 +853,7 @@ export type Database = {
           uses_count: number
         }[]
       }
+      get_event_access_key: { Args: { _event_id: string }; Returns: string }
       get_event_rrpp_by_code: {
         Args: { _code: string }
         Returns: {
