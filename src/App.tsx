@@ -22,6 +22,18 @@ import PublicEventPage from "./pages/PublicEventPage";
 import OrganizerEventDetail from "./pages/OrganizerEventDetail";
 import RrppRedirectPage from "./pages/RrppRedirectPage";
 import ProductoraPublicPage from "./pages/ProductoraPublicPage";
+import AdminGate, { AdminAuthShell, AdminEntry } from "./pages/admin/AdminGate";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminMetrics from "./pages/admin/AdminMetrics";
+import AdminSettlements from "./pages/admin/AdminSettlements";
+import AdminTransactions from "./pages/admin/AdminTransactions";
+import AdminProductoras from "./pages/admin/AdminProductoras";
+import AdminEvents from "./pages/admin/AdminEvents";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSupport from "./pages/admin/AdminSupport";
+import AdminAudit from "./pages/admin/AdminAudit";
+import AdminManagement from "./pages/admin/AdminManagement";
+import AdminSearch from "./pages/admin/AdminSearch";
 
 const queryClient = new QueryClient();
 
