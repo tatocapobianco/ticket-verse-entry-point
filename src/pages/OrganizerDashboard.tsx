@@ -21,7 +21,7 @@ import { formatEventDate, formatARS } from '@/lib/format';
 type EventRow = {
   id: string; name: string; description: string | null;
   event_date: string | null; event_time: string | null; location: string | null;
-  event_number: string; access_key: string; is_public: boolean; status: string;
+  event_number: string; is_public: boolean; status: string;
 };
 type TicketTypeRow = {
   id: string; event_id: string; price: number;
@@ -40,13 +40,15 @@ const OrganizerDashboard = () => {
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [revealedKey, setRevealedKey] = useState<Record<string, boolean>>({});
+  const [accessKeys, setAccessKeys] = useState<Record<string, string>>({});
+
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
 
   const load = async () => {
     if (!user) return;
     setLoading(true);
     const [{ data: evs }, { data: profile }] = await Promise.all([
-      supabase.from('events').select('*').eq('organizer_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('events').select('id,name,description,event_date,event_time,location,event_number,is_public,status,created_at').eq('organizer_id', user.id).order('created_at', { ascending: false }),
       supabase.from('profiles').select('mp_access_token').eq('id', user.id).maybeSingle(),
     ]);
     setEvents((evs ?? []) as EventRow[]);
@@ -98,9 +100,19 @@ const OrganizerDashboard = () => {
     toast.success('Link copiado');
   };
 
+  const fetchAccessKey = async (eventId: string) => {
+    if (accessKeys[eventId]) return accessKeys[eventId];
+    const { data } = await supabase.rpc('get_event_access_key', { _event_id: eventId });
+    const key = (data as string | null) ?? null;
+    if (key) setAccessKeys((prev) => ({ ...prev, [eventId]: key }));
+    return key;
+  };
+
   const copyAccessKey = async (ev: EventRow, e: React.MouseEvent) => {
     e.stopPropagation();
-    await navigator.clipboard.writeText(ev.access_key);
+    const key = await fetchAccessKey(ev.id);
+    if (!key) return toast.error('No se pudo obtener la clave');
+    await navigator.clipboard.writeText(key);
     toast.success('Clave copiada');
   };
 
@@ -209,9 +221,9 @@ const OrganizerDashboard = () => {
                       <div className="p-3 rounded-xl bg-secondary/40 col-span-2">
                         <p className="text-xs text-muted-foreground">Clave del escáner</p>
                         <div className="flex items-center gap-1">
-                          <p className="text-sm font-mono flex-1 truncate">{revealed ? ev.access_key : '••••••••'}</p>
+                          <p className="text-sm font-mono flex-1 truncate">{revealed ? (accessKeys[ev.id] ?? '…') : '••••••••'}</p>
                           <Button size="icon" variant="ghost" className="h-7 w-7"
-                            onClick={(e) => { e.stopPropagation(); setRevealedKey(r => ({ ...r, [ev.id]: !r[ev.id] })); }}>
+                            onClick={async (e) => { e.stopPropagation(); if (!revealed) await fetchAccessKey(ev.id); setRevealedKey(r => ({ ...r, [ev.id]: !r[ev.id] })); }}>
                             {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                           </Button>
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => copyAccessKey(ev, e)}>

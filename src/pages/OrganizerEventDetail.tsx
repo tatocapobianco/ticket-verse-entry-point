@@ -25,10 +25,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
 
+const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
+const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
+
 type EventRow = {
-  id: string; name: string; description: string | null;
+  id: string; organizer_id?: string; name: string; description: string | null;
   event_date: string | null; event_time: string | null; location: string | null;
-  event_number: string; access_key: string; is_public: boolean; status: string;
+  event_number: string; is_public: boolean; status: string;
   image_url?: string | null;
 };
 
@@ -36,8 +39,8 @@ type TicketTypeRow = {
   id: string; event_id: string; name: string; description: string | null;
   price: number; quantity_total: number | null; quantity_sold: number;
   status: string; is_courtesy: boolean; requires_auth_code: boolean;
-  authorization_code: string | null;
 };
+
 type CourtesyLinkRow = {
   id: string; event_id: string; ticket_type_id: string; code: string;
   max_uses: number; uses_count: number; is_active: boolean;
@@ -67,6 +70,8 @@ const OrganizerEventDetail = () => {
   const [courtesyByTicket, setCourtesyByTicket] = useState<Record<string, number>>({});
   const [revenueTotal, setRevenueTotal] = useState(0);
   const [showKey, setShowKey] = useState(false);
+  const [accessKey, setAccessKey] = useState<string | null>(null);
+
 
   // rrpps
   const [rrpps, setRrpps] = useState<RrppRow[]>([]);
@@ -97,7 +102,7 @@ const OrganizerEventDetail = () => {
     if (!id || !user) return;
     setLoading(true);
     const { data: evd, error: evErr } = await supabase
-      .from('events').select('*').eq('id', id).maybeSingle();
+      .from('events').select(EVENT_COLS).eq('id', id).maybeSingle();
     if (evErr || !evd) {
       toast.error('Evento no encontrado');
       navigate('/organizer-dashboard');
@@ -114,12 +119,15 @@ const OrganizerEventDetail = () => {
       date: evd.event_date ?? '', time: (evd.event_time ?? '').slice(0, 5),
       is_public: evd.is_public, status: evd.status,
     });
+    const { data: ak } = await supabase.rpc('get_event_access_key', { _event_id: id });
+    setAccessKey((ak as string | null) ?? null);
 
     const ttRes = await supabase
       .from('ticket_types')
-      .select('*')
+      .select(TT_COLS)
       .eq('event_id', id)
       .order('created_at');
+
     if (ttRes.error) {
       setTicketsError(ttRes.error.message);
       setTickets([]);
@@ -164,15 +172,20 @@ const OrganizerEventDetail = () => {
   const totalSold = tickets.reduce((a, t) => a + t.quantity_sold, 0);
   const totalStock = tickets.reduce((a, t) => a + (t.quantity_total ?? 0), 0);
 
-  const openTicketSheet = (t?: TicketTypeRow) => {
+  const openTicketSheet = async (t?: TicketTypeRow) => {
     if (t) {
       setEditingTicket(t);
+      let code = '';
+      if (t.requires_auth_code) {
+        const { data } = await supabase.rpc('get_ticket_type_auth_code', { _ticket_type_id: t.id });
+        code = (data as string | null) ?? '';
+      }
       setTForm({
         name: t.name, description: t.description ?? '',
         price: String(t.price ?? ''),
         quantity: t.quantity_total?.toString() ?? '',
         is_courtesy: t.is_courtesy,
-        auth_code: t.authorization_code ?? '',
+        auth_code: code,
       });
     } else {
       setEditingTicket(null);
@@ -180,6 +193,7 @@ const OrganizerEventDetail = () => {
     }
     setTicketSheetOpen(true);
   };
+
 
   const saveTicket = async () => {
     if (!ev) return;
@@ -197,8 +211,8 @@ const OrganizerEventDetail = () => {
       requires_auth_code: !!code,
     };
     const query = editingTicket
-      ? supabase.from('ticket_types').update(payload).eq('id', editingTicket.id).select('*').single()
-      : supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' }).select('*').single();
+      ? supabase.from('ticket_types').update(payload).eq('id', editingTicket.id).select(TT_COLS).single()
+      : supabase.from('ticket_types').insert({ ...payload, quantity_sold: 0, status: 'active' }).select(TT_COLS).single();
     const { data: saved, error } = await query;
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -325,9 +339,10 @@ const OrganizerEventDetail = () => {
   };
 
   const copyAccessKey = async () => {
-    if (!ev) return;
-    await navigator.clipboard.writeText(ev.access_key);
+    if (!accessKey) return toast.error('No se pudo obtener la clave');
+    await navigator.clipboard.writeText(accessKey);
     toast.success('Clave copiada');
+
   };
 
   const saveSettings = async () => {
@@ -410,7 +425,7 @@ const OrganizerEventDetail = () => {
               </span>
               <span className="rounded-full bg-card/95 px-4 py-1.5 text-sm flex items-center gap-1">
                 <span className="text-muted-foreground">Clave escáner</span>
-                <span className="font-mono">{showKey ? ev.access_key : '••••••'}</span>
+                <span className="font-mono">{showKey ? (accessKey ?? '—') : '••••••'}</span>
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setShowKey(v => !v)}>
                   {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </Button>
