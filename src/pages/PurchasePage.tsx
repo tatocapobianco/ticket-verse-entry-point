@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, ArrowLeft, Loader2, Calendar, MapPin, Lock } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CreditCard, ArrowLeft, Loader2, Calendar, MapPin, Lock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { formatEventDate, formatARS } from '@/lib/format';
@@ -54,6 +55,7 @@ const PurchasePage = () => {
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [now, setNow] = useState(Date.now());
   const [processing, setProcessing] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
   const [recaptchaKey, setRecaptchaKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -131,40 +133,53 @@ const PurchasePage = () => {
 
   const handlePay = async () => {
     if (!reservationId) return;
+    setPayError(null);
     setProcessing(true);
-    const recaptcha_token = await getCaptchaToken('purchase');
-    const { data, error } = await supabase.functions.invoke('mp-create-preference', {
-      body: {
-        reservation_id: reservationId,
-        recaptcha_token,
-        auth_code: ticket?.requires_auth_code ? authCode.trim() : null,
-      },
-    });
-    setProcessing(false);
-    let payload: any = data;
-    if (error && (error as any).context) {
-      const ctx = (error as any).context;
-      try { payload = await ctx.json(); }
-      catch {
-        try { const t = await ctx.text(); payload = { message: t }; } catch { /* ignore */ }
+    try {
+      const recaptcha_token = await getCaptchaToken('purchase');
+      const { data, error } = await supabase.functions.invoke('mp-create-preference', {
+        body: {
+          reservation_id: reservationId,
+          recaptcha_token,
+          auth_code: ticket?.requires_auth_code ? authCode.trim() : null,
+        },
+      });
+      let payload: any = data;
+      if (error && (error as any).context) {
+        const ctx = (error as any).context;
+        try { payload = await ctx.json(); }
+        catch {
+          try { const t = await ctx.text(); payload = { message: t }; } catch { /* ignore */ }
+        }
       }
+      if (error || payload?.error) {
+        const detail =
+          payload?.message ||
+          payload?.error ||
+          (error as any)?.message ||
+          'error desconocido';
+        setPayError(String(detail));
+        toast.error(`No se pudo iniciar el pago: ${detail}`);
+        console.error('mp-create-preference failed', { error, payload });
+        return;
+      }
+      if (!payload?.init_point) {
+        const msg = 'El servidor no devolvió un link de pago. Intentá de nuevo en unos segundos.';
+        setPayError(msg);
+        toast.error(msg);
+        return;
+      }
+      window.location.href = payload.init_point;
+    } catch (e: any) {
+      const msg = e?.message || 'Error de conexión. Revisá tu internet e intentá de nuevo.';
+      setPayError(msg);
+      toast.error(`No se pudo iniciar el pago: ${msg}`);
+      console.error('mp-create-preference threw', e);
+    } finally {
+      setProcessing(false);
     }
-    if (error || payload?.error) {
-      const detail =
-        payload?.message ||
-        payload?.error ||
-        (error as any)?.message ||
-        'error desconocido';
-      toast.error(`No se pudo iniciar el pago: ${detail}`);
-      console.error('mp-create-preference failed', { error, payload });
-      return;
-    }
-    if (!payload?.init_point) {
-      toast.error('No se pudo iniciar el pago: respuesta sin init_point');
-      return;
-    }
-    window.location.href = payload.init_point;
   };
+
 
   if (loading || !ticket) {
     return (
@@ -205,9 +220,16 @@ const PurchasePage = () => {
                 <span className="font-display font-semibold">Total a pagar</span>
                 <span className="font-display font-bold text-2xl">{formatARS(total)}</span>
               </div>
+              {payError && (
+                <Alert variant="destructive" className="rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>No se pudo iniciar el pago</AlertTitle>
+                  <AlertDescription>{payError}</AlertDescription>
+                </Alert>
+              )}
               <Button onClick={handlePay} disabled={processing || secondsLeft === 0} className="w-full h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-base font-display font-semibold" size="lg">
                 {processing ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <CreditCard className="h-5 w-5 mr-2" />}
-                {secondsLeft === 0 ? 'Reserva expirada' : `Pagar ${formatARS(total)}`}
+                {processing ? 'Procesando…' : secondsLeft === 0 ? 'Reserva expirada' : payError ? `Reintentar pago ${formatARS(total)}` : `Pagar ${formatARS(total)}`}
               </Button>
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5"><Lock className="h-3 w-3" /> Protegido por reCAPTCHA.</p>
 
