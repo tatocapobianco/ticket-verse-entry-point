@@ -97,6 +97,22 @@ const PublicEventPage = () => {
           <div className="absolute inset-x-0 bottom-0 max-w-4xl mx-auto px-4 sm:px-6 pb-6">
             {!event.is_public && <Badge variant="secondary" className="mb-3">Privado</Badge>}
             <h1 className="font-display font-bold text-3xl md:text-5xl text-primary-foreground drop-shadow">{event.name}</h1>
+            {productora && (
+              <div className="mt-3 flex items-center gap-2">
+                <Avatar className="h-7 w-7 border border-primary-foreground/40">
+                  {productora.logo_url && <AvatarImage src={productora.logo_url} alt={`Logo de ${productora.nombre}`} className="object-cover" />}
+                  <AvatarFallback className="bg-card text-primary text-[10px] font-semibold">
+                    {eventInitials(productora.nombre)}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-sm text-primary-foreground/90">
+                  Organiza:{' '}
+                  <Link to={`/productora/${productora.slug}`} className="font-semibold underline underline-offset-2 hover:text-primary-foreground">
+                    {productora.nombre}
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
