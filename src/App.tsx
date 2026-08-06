@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/eventos" element={<HomePage />} />
             <Route path="/evento/:id" element={<PublicEventPage />} />
+            <Route path="/productora/:slug" element={<ProductoraPublicPage />} />
             <Route path="/login" element={<Index />} />
             <Route path="/cortesia/:courtesyCode" element={<CourtesyClaimPage />} />
             <Route path="/rrpp/:link_code" element={<RrppRedirectPage />} />
