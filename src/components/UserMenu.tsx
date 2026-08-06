@@ -42,10 +42,10 @@ export function UserMenu() {
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 rounded-2xl">
-        <DropdownMenuLabel className="py-3">
-          <p className="font-display font-semibold text-sm truncate">{displayName}</p>
-          <p className="text-xs text-muted-foreground font-normal truncate">{email}</p>
+      <DropdownMenuContent align="end" side="bottom" sideOffset={8} collisionPadding={16} className="w-[260px] rounded-2xl">
+        <DropdownMenuLabel className="py-3 px-3 w-full max-w-[260px]">
+          <p className="font-display font-semibold text-sm truncate w-full" title={displayName}>{displayName}</p>
+          <p className="text-xs text-muted-foreground font-normal truncate w-full" title={email}>{email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/buyer-dashboard')} className="cursor-pointer">
