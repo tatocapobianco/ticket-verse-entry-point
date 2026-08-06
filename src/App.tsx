@@ -52,11 +52,14 @@ const App = () => (
             <Route path="/organizer-onboarding" element={
               <ProtectedRoute><OrganizerOnboarding /></ProtectedRoute>
             } />
+            <Route path="/organizer" element={
+              <ProtectedRoute><OrganizerDashboard /></ProtectedRoute>
+            } />
             <Route path="/organizer-dashboard" element={
-              <ProtectedRoute requireRole="organizer"><OrganizerDashboard /></ProtectedRoute>
+              <ProtectedRoute><OrganizerDashboard /></ProtectedRoute>
             } />
             <Route path="/organizer/events/:id" element={
-              <ProtectedRoute requireRole="organizer"><OrganizerEventDetail /></ProtectedRoute>
+              <ProtectedRoute><OrganizerEventDetail /></ProtectedRoute>
             } />
             <Route path="/scanner-access" element={
               <ProtectedRoute><ScannerAccess /></ProtectedRoute>
