@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Loader2, AlertCircle, LogIn } from 'lucide-react';
 import cupoLogo from '@/assets/cupo-logo.png';
 import { useAuth } from '@/hooks/useAuth';
-import { formatEventDate, formatARS } from '@/lib/format';
+import { formatEventDate, formatARS, eventInitials } from '@/lib/format';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const initials = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'EV';
