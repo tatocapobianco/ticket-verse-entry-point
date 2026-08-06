@@ -1004,6 +1004,94 @@ export type Database = {
       }
     }
     Functions: {
+      admin_audit: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: Json
+      }
+      admin_delete_event: { Args: { _id: string }; Returns: undefined }
+      admin_event_support: { Args: { _event_id: string }; Returns: Json }
+      admin_events: {
+        Args: { _productora_id?: string; _search?: string }
+        Returns: Json
+      }
+      admin_failed_payments: { Args: { _limit?: number }; Returns: Json }
+      admin_global_search: { Args: { _q: string }; Returns: Json }
+      admin_grant_admin: { Args: { _email: string }; Returns: Json }
+      admin_list_admins: { Args: never; Returns: Json }
+      admin_log: {
+        Args: {
+          _action: string
+          _details?: Json
+          _entity_id: string
+          _entity_label: string
+          _entity_type: string
+        }
+        Returns: undefined
+      }
+      admin_mark_settlement: {
+        Args: {
+          _event_id: string
+          _note?: string
+          _productora_id: string
+          _status: string
+        }
+        Returns: undefined
+      }
+      admin_metrics: {
+        Args: { _from: string; _granularity?: string; _to: string }
+        Returns: Json
+      }
+      admin_productoras: { Args: { _search?: string }; Returns: Json }
+      admin_purchase_detail: { Args: { _purchase_id: string }; Returns: Json }
+      admin_require: { Args: never; Returns: undefined }
+      admin_revoke_admin: { Args: { _user_id: string }; Returns: Json }
+      admin_revoke_courtesy: { Args: { _link_id: string }; Returns: undefined }
+      admin_set_productora_suspended: {
+        Args: { _id: string; _reason?: string; _suspended: boolean }
+        Returns: undefined
+      }
+      admin_set_rrpp_active: {
+        Args: { _active: boolean; _event_rrpp_id: string }
+        Returns: undefined
+      }
+      admin_set_ticket_used: {
+        Args: { _ticket_id: string; _used: boolean }
+        Returns: undefined
+      }
+      admin_set_user_suspended: {
+        Args: { _id: string; _suspended: boolean }
+        Returns: undefined
+      }
+      admin_settlements: {
+        Args: { _event_id?: string; _from?: string; _to?: string }
+        Returns: Json
+      }
+      admin_transactions: {
+        Args: {
+          _event_id?: string
+          _from?: string
+          _limit?: number
+          _offset?: number
+          _productora_id?: string
+          _search?: string
+          _status?: string
+          _to?: string
+        }
+        Returns: Json
+      }
+      admin_update_event: {
+        Args: { _id: string; _patch: Json }
+        Returns: undefined
+      }
+      admin_update_productora: {
+        Args: { _id: string; _patch: Json }
+        Returns: undefined
+      }
+      admin_user_tickets: { Args: { _user_id: string }; Returns: Json }
+      admin_users: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: Json
+      }
       check_purchase_rate_limit: {
         Args: { _ip: string; _user_id: string }
         Returns: {
@@ -1059,6 +1147,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: never; Returns: boolean }
       productora_nombre_disponible: {
         Args: { _nombre: string }
         Returns: boolean
