@@ -224,39 +224,8 @@ const Index = () => {
     </svg>
   );
 
-  if (confirmSentTo) {
-    return (
-      <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-        <div className="w-full max-w-md glass-card rounded-3xl p-8 text-center">
-          <img src={cupoLogo} alt="Cupo" className="mx-auto h-12 w-auto mb-6" />
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
-            <MailCheck className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold font-display mb-2">Revisá tu email</h1>
-          <p className="text-muted-foreground mb-6">
-            Te enviamos un email de confirmación a <strong>{confirmSentTo}</strong>. Abrí el link para
-            activar tu cuenta y poder ingresar.
-          </p>
-          <div className="space-y-3">
-            <Button
-              onClick={handleResend}
-              disabled={loading}
-              className="w-full h-12 rounded-2xl brand-gradient-bg text-primary-foreground font-semibold"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reenviar email'}
-            </Button>
-            <Button
-              onClick={() => setConfirmSentTo(null)}
-              variant="outline"
-              className="w-full h-12 rounded-2xl"
-            >
-              Volver a iniciar sesión
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
+
 
   return (
 
