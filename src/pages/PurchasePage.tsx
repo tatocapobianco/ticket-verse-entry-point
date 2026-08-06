@@ -131,40 +131,53 @@ const PurchasePage = () => {
 
   const handlePay = async () => {
     if (!reservationId) return;
+    setPayError(null);
     setProcessing(true);
-    const recaptcha_token = await getCaptchaToken('purchase');
-    const { data, error } = await supabase.functions.invoke('mp-create-preference', {
-      body: {
-        reservation_id: reservationId,
-        recaptcha_token,
-        auth_code: ticket?.requires_auth_code ? authCode.trim() : null,
-      },
-    });
-    setProcessing(false);
-    let payload: any = data;
-    if (error && (error as any).context) {
-      const ctx = (error as any).context;
-      try { payload = await ctx.json(); }
-      catch {
-        try { const t = await ctx.text(); payload = { message: t }; } catch { /* ignore */ }
+    try {
+      const recaptcha_token = await getCaptchaToken('purchase');
+      const { data, error } = await supabase.functions.invoke('mp-create-preference', {
+        body: {
+          reservation_id: reservationId,
+          recaptcha_token,
+          auth_code: ticket?.requires_auth_code ? authCode.trim() : null,
+        },
+      });
+      let payload: any = data;
+      if (error && (error as any).context) {
+        const ctx = (error as any).context;
+        try { payload = await ctx.json(); }
+        catch {
+          try { const t = await ctx.text(); payload = { message: t }; } catch { /* ignore */ }
+        }
       }
+      if (error || payload?.error) {
+        const detail =
+          payload?.message ||
+          payload?.error ||
+          (error as any)?.message ||
+          'error desconocido';
+        setPayError(String(detail));
+        toast.error(`No se pudo iniciar el pago: ${detail}`);
+        console.error('mp-create-preference failed', { error, payload });
+        return;
+      }
+      if (!payload?.init_point) {
+        const msg = 'El servidor no devolvió un link de pago. Intentá de nuevo en unos segundos.';
+        setPayError(msg);
+        toast.error(msg);
+        return;
+      }
+      window.location.href = payload.init_point;
+    } catch (e: any) {
+      const msg = e?.message || 'Error de conexión. Revisá tu internet e intentá de nuevo.';
+      setPayError(msg);
+      toast.error(`No se pudo iniciar el pago: ${msg}`);
+      console.error('mp-create-preference threw', e);
+    } finally {
+      setProcessing(false);
     }
-    if (error || payload?.error) {
-      const detail =
-        payload?.message ||
-        payload?.error ||
-        (error as any)?.message ||
-        'error desconocido';
-      toast.error(`No se pudo iniciar el pago: ${detail}`);
-      console.error('mp-create-preference failed', { error, payload });
-      return;
-    }
-    if (!payload?.init_point) {
-      toast.error('No se pudo iniciar el pago: respuesta sin init_point');
-      return;
-    }
-    window.location.href = payload.init_point;
   };
+
 
   if (loading || !ticket) {
     return (
