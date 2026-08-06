@@ -8,3 +8,7 @@ verify_jwt = true
 
 [functions.mp-webhook]
 verify_jwt = false
+
+[functions.dni-login]
+verify_jwt = false
+
