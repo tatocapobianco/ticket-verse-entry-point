@@ -2,34 +2,21 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, LogIn, Ticket, Users, QrCode, LogOut, UserCog, Loader2 } from 'lucide-react';
+import { Menu, LogIn, Ticket, Users, QrCode, LogOut, UserCog } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useProductora } from '@/hooks/useProductora';
 
 export function AppSideMenu() {
   const { user, roles, signOut } = useAuth();
+  const { productora } = useProductora();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [activating, setActivating] = useState(false);
 
-  const isOrganizer = roles.includes('organizer');
   const isScanner = roles.includes('scanner');
 
   const go = (path: string) => {
     setOpen(false);
     navigate(path);
-  };
-
-  const activateOrganizer = async () => {
-    setActivating(true);
-    const { error } = await supabase.rpc('self_assign_role', { _role: 'organizer' });
-    setActivating(false);
-    if (error) return toast.error(error.message);
-    toast.success('¡Ya sos organizador!');
-    // Force refresh of roles by reloading auth listener; safest is a full navigation
-    setOpen(false);
-    window.location.href = '/organizer-dashboard';
   };
 
   const logout = async () => {
