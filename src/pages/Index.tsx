@@ -60,6 +60,9 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   const nextPath = safeNext(searchParams.get('next'));
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [confirmSentTo, setConfirmSentTo] = useState<string | null>(null);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '',
@@ -86,10 +89,15 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const fail = (setter: (v: string | null) => void, message: string) => {
+    setter(message);
+    toast.error(message, { duration: 8000 });
+  };
+
   const handleLogin = async () => {
+    setLoginError(null);
     if (!loginData.email || !loginData.password) {
-      toast.error('Completá tu email o DNI y contraseña');
-      return;
+      return fail(setLoginError, 'Completá tu email o DNI y tu contraseña.');
     }
     setLoading(true);
     let emailToUse = loginData.email.trim();
@@ -101,8 +109,7 @@ const Index = () => {
       });
       if (dniErr || !resolvedEmail) {
         setLoading(false);
-        toast.error('No encontramos una cuenta con ese DNI');
-        return;
+        return fail(setLoginError, 'No encontramos una cuenta con ese DNI. Probá con tu email.');
       }
       emailToUse = resolvedEmail as string;
     }
@@ -112,24 +119,35 @@ const Index = () => {
       password: loginData.password,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      const message = authErrorMessage(error);
+      fail(setLoginError, message);
+      const raw = (error.message ?? '').toLowerCase();
+      if (raw.includes('email not confirmed') || error.code === 'email_not_confirmed') {
+        setConfirmSentTo(emailToUse);
+      }
+      return;
+    }
     toast.success('¡Hola de nuevo! 👋');
     navigate(nextPath ?? '/', { replace: true });
   };
 
   const handleRegister = async () => {
+    setRegisterError(null);
     if (!registerData.name || !registerData.email || !registerData.password) {
-      toast.error('Completá nombre, email y contraseña');
-      return;
+      return fail(setRegisterError, 'Completá nombre, email y contraseña.');
     }
     if (registerData.password !== registerData.confirmPassword) {
-      toast.error('Las contraseñas no coinciden');
-      return;
+      return fail(setRegisterError, 'Las contraseñas no coinciden.');
+    }
+    if (registerData.password.length < 8) {
+      return fail(setRegisterError, 'La contraseña debe tener al menos 8 caracteres.');
     }
     setLoading(true);
+    const email = registerData.email.trim();
     const emailRedirectTo = window.location.origin + (nextPath ?? '/');
-    const { error } = await supabase.auth.signUp({
-      email: registerData.email.trim(),
+    const { data, error } = await supabase.auth.signUp({
+      email,
       password: registerData.password,
       options: {
         emailRedirectTo,
@@ -141,10 +159,33 @@ const Index = () => {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success('¡Cuenta creada! Revisá tu email si se pide confirmación.');
+    if (error) return fail(setRegisterError, authErrorMessage(error));
+
+    // Email confirmation enabled: no session until the user clicks the link.
+    if (!data.session) {
+      setConfirmSentTo(email);
+      toast.success('Te enviamos un email de confirmación. Revisá tu bandeja de entrada.', {
+        duration: 8000,
+      });
+      return;
+    }
+    toast.success('¡Cuenta creada! 🎉');
     navigate(nextPath ?? '/', { replace: true });
   };
+
+  const handleResend = async () => {
+    if (!confirmSentTo) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: confirmSentTo,
+      options: { emailRedirectTo: window.location.origin + (nextPath ?? '/') },
+    });
+    setLoading(false);
+    if (error) return toast.error(authErrorMessage(error), { duration: 8000 });
+    toast.success('Te reenviamos el email de confirmación.');
+  };
+
 
   const handleGoogleAuth = async () => {
     const redirectPath = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/';
