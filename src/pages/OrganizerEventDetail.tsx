@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
+import { validateEventDate, eventDateLimits } from '@/lib/validation';
 
 const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
 const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
@@ -347,6 +348,10 @@ const OrganizerEventDetail = () => {
 
   const saveSettings = async () => {
     if (!ev) return;
+    if (sForm.date) {
+      const dateError = validateEventDate(sForm.date);
+      if (dateError) { toast.error(dateError); return; }
+    }
     setSaving(true);
     const { error } = await supabase.from('events').update({
       name: sForm.name, description: sForm.description || null,
