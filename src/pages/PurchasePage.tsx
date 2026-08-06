@@ -197,16 +197,20 @@ const PurchasePage = () => {
                 <p className="text-sm text-muted-foreground">{formatEventDate(ev.event_date, ev.event_time)}</p>
                 {ev.location && <p className="text-sm text-muted-foreground">{ev.location}</p>}
               </div>
-              <Separator />
-              <div className="flex justify-between"><span>Precio del ticket ({quantity}x)</span><span>{formatARS(subtotal)}</span></div>
+              <Separator className="bg-border" />
+              <div className="flex justify-between"><span>Precio del ticket ({quantity}x)</span><span className="font-medium">{formatARS(subtotal)}</span></div>
               <div className="flex justify-between text-sm text-muted-foreground"><span>Cargo por servicio (15%)</span><span>{formatARS(fee)}</span></div>
-              <Separator />
-              <div className="flex justify-between text-lg font-bold"><span>Total a pagar</span><span>{formatARS(total)}</span></div>
-              <Button onClick={handlePay} disabled={processing || secondsLeft === 0} className="w-full rounded-full brand-gradient-bg text-primary-foreground" size="lg">
-                {processing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
+              <Separator className="bg-border" />
+              <div className="flex justify-between items-center rounded-2xl bg-primary/5 p-4">
+                <span className="font-display font-semibold">Total a pagar</span>
+                <span className="font-display font-bold text-2xl">{formatARS(total)}</span>
+              </div>
+              <Button onClick={handlePay} disabled={processing || secondsLeft === 0} className="w-full h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-base font-display font-semibold" size="lg">
+                {processing ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <CreditCard className="h-5 w-5 mr-2" />}
                 {secondsLeft === 0 ? 'Reserva expirada' : `Pagar ${formatARS(total)}`}
               </Button>
-              <p className="text-xs text-muted-foreground text-center">Protegido por reCAPTCHA.</p>
+              <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5"><Lock className="h-3 w-3" /> Protegido por reCAPTCHA.</p>
+
             </CardContent>
           </Card>
         </div>
