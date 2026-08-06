@@ -172,15 +172,20 @@ const OrganizerEventDetail = () => {
   const totalSold = tickets.reduce((a, t) => a + t.quantity_sold, 0);
   const totalStock = tickets.reduce((a, t) => a + (t.quantity_total ?? 0), 0);
 
-  const openTicketSheet = (t?: TicketTypeRow) => {
+  const openTicketSheet = async (t?: TicketTypeRow) => {
     if (t) {
       setEditingTicket(t);
+      let code = '';
+      if (t.requires_auth_code) {
+        const { data } = await supabase.rpc('get_ticket_type_auth_code', { _ticket_type_id: t.id });
+        code = (data as string | null) ?? '';
+      }
       setTForm({
         name: t.name, description: t.description ?? '',
         price: String(t.price ?? ''),
         quantity: t.quantity_total?.toString() ?? '',
         is_courtesy: t.is_courtesy,
-        auth_code: t.authorization_code ?? '',
+        auth_code: code,
       });
     } else {
       setEditingTicket(null);
@@ -188,6 +193,7 @@ const OrganizerEventDetail = () => {
     }
     setTicketSheetOpen(true);
   };
+
 
   const saveTicket = async () => {
     if (!ev) return;
