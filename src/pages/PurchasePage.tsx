@@ -230,7 +230,6 @@ const PurchasePage = () => {
                 {processing ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <CreditCard className="h-5 w-5 mr-2" />}
                 {processing ? 'Procesando…' : secondsLeft === 0 ? 'Reserva expirada' : payError ? `Reintentar pago ${formatARS(total)}` : `Pagar ${formatARS(total)}`}
               </Button>
-              </Button>
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5"><Lock className="h-3 w-3" /> Protegido por reCAPTCHA.</p>
 
             </CardContent>
