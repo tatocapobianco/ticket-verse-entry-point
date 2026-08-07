@@ -26,7 +26,7 @@ const PublicEventPage = () => {
   useEffect(() => {
     (async () => {
       if (!id) return;
-      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,event_number,is_public,status,productora_id').eq('id', id).maybeSingle();
+      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,flyer_url,event_number,is_public,status,productora_id').eq('id', id).maybeSingle();
       if (!ev) { setError('not_found'); setLoading(false); return; }
       if (ev.status !== 'active') { setError('inactive'); setLoading(false); return; }
       setEvent(ev);
