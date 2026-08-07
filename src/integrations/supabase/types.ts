@@ -190,6 +190,7 @@ export type Database = {
           event_date: string | null
           event_number: string
           event_time: string | null
+          flyer_url: string | null
           id: string
           image_url: string | null
           is_public: boolean
@@ -207,6 +208,7 @@ export type Database = {
           event_date?: string | null
           event_number: string
           event_time?: string | null
+          flyer_url?: string | null
           id?: string
           image_url?: string | null
           is_public?: boolean
@@ -224,6 +226,7 @@ export type Database = {
           event_date?: string | null
           event_number?: string
           event_time?: string | null
+          flyer_url?: string | null
           id?: string
           image_url?: string | null
           is_public?: boolean
