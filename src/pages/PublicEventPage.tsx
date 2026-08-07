@@ -69,10 +69,11 @@ const PublicEventPage = () => {
     setMeta('property', 'og:description', desc);
     setMeta('property', 'og:type', 'website');
     setMeta('property', 'og:url', window.location.href);
-    setMeta('name', 'twitter:card', event.image_url ? 'summary_large_image' : 'summary');
-    if (event.image_url) {
-      setMeta('property', 'og:image', event.image_url);
-      setMeta('name', 'twitter:image', event.image_url);
+    const shareImage = event.image_url || event.flyer_url;
+    setMeta('name', 'twitter:card', shareImage ? 'summary_large_image' : 'summary');
+    if (shareImage) {
+      setMeta('property', 'og:image', shareImage);
+      setMeta('name', 'twitter:image', shareImage);
     }
   }, [event]);
 
