@@ -22,7 +22,7 @@ import { useProductora } from '@/hooks/useProductora';
 import { ProductoraOnboarding } from '@/components/ProductoraOnboarding';
 import { ProductoraForm } from '@/components/ProductoraForm';
 import { EventImageField } from '@/components/EventImageField';
-import { uploadEventImage } from '@/lib/eventImage';
+import { uploadEventImage, thumbFromFlyer } from '@/lib/eventImage';
 
 
 type EventRow = {
