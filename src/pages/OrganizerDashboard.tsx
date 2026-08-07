@@ -55,6 +55,7 @@ const OrganizerDashboard = () => {
 
   const [newEvent, setNewEvent] = useState({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
   const [newImage, setNewImage] = useState<{ previewUrl: string; blob: Blob } | null>(null);
+  const [newFlyer, setNewFlyer] = useState<{ previewUrl: string; blob: Blob } | null>(null);
 
   const load = async () => {
     if (!user) return;
