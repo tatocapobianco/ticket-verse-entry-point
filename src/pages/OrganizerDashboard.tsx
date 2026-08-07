@@ -87,14 +87,16 @@ const OrganizerDashboard = () => {
     if (!user) return;
     setSaving(true);
     let imageUrl: string | null = null;
-    if (newImage) {
-      try {
-        imageUrl = (await uploadEventImage(newImage.blob, user.id)).url;
-      } catch (e: any) {
-        setSaving(false);
-        toast.error(e?.message ?? 'No se pudo subir la imagen');
-        return;
-      }
+    let flyerUrl: string | null = null;
+    try {
+      if (newFlyer) flyerUrl = (await uploadEventImage(newFlyer.blob, user.id)).url;
+      // Si no subieron miniatura pero sí flyer, la generamos recortando el flyer.
+      const thumbBlob = newImage?.blob ?? (newFlyer ? (await thumbFromFlyer(newFlyer.blob)).blob : null);
+      if (thumbBlob) imageUrl = (await uploadEventImage(thumbBlob, user.id)).url;
+    } catch (e: any) {
+      setSaving(false);
+      toast.error(e?.message ?? 'No se pudo subir la imagen');
+      return;
     }
     const { error } = await supabase.from('events').insert({
       organizer_id: user.id, name: newEvent.name, description: newEvent.description || null,
@@ -102,6 +104,7 @@ const OrganizerDashboard = () => {
       event_number: genCode('EVT', 6), access_key: genCode('', 8).toLowerCase(),
       productora_id: productora?.id ?? null,
       image_url: imageUrl,
+      flyer_url: flyerUrl,
       is_public: newEvent.is_public, status: newEvent.status,
     });
     setSaving(false);
@@ -110,6 +113,7 @@ const OrganizerDashboard = () => {
     setShowCreateEvent(false);
     setNewEvent({ name: '', description: '', date: '', time: '', location: '', is_public: true, status: 'active' });
     setNewImage(null);
+    setNewFlyer(null);
     load();
   };
 
