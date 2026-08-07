@@ -26,9 +26,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatEventDate, formatARS } from '@/lib/format';
 import { validateEventDate, eventDateLimits } from '@/lib/validation';
 import { EventImageField } from '@/components/EventImageField';
-import { uploadEventImage, deleteEventImage, pathFromEventImageUrl } from '@/lib/eventImage';
+import { uploadEventImage, deleteEventImage, pathFromEventImageUrl, thumbFromFlyer } from '@/lib/eventImage';
 
-const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,event_number,is_public,status';
+const EVENT_COLS = 'id,organizer_id,name,description,event_date,event_time,location,image_url,flyer_url,event_number,is_public,status';
 const TT_COLS = 'id,event_id,name,description,price,quantity_total,quantity_sold,status,is_courtesy,requires_auth_code,created_at';
 
 type EventRow = {
@@ -36,6 +36,7 @@ type EventRow = {
   event_date: string | null; event_time: string | null; location: string | null;
   event_number: string; is_public: boolean; status: string;
   image_url?: string | null;
+  flyer_url?: string | null;
 };
 
 type TicketTypeRow = {
@@ -104,6 +105,8 @@ const OrganizerEventDetail = () => {
   // Imagen del evento: URL guardada + cambio pendiente (blob a subir, o null = borrar)
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [pendingImage, setPendingImage] = useState<{ previewUrl: string; blob: Blob } | null | undefined>(undefined);
+  const [flyerUrl, setFlyerUrl] = useState<string | null>(null);
+  const [pendingFlyer, setPendingFlyer] = useState<{ previewUrl: string; blob: Blob } | null | undefined>(undefined);
 
   const load = async (spinner = true) => {
     if (!id || !user) return;
@@ -122,7 +125,9 @@ const OrganizerEventDetail = () => {
     }
     setEv(evd as EventRow);
     setImageUrl((evd as EventRow).image_url ?? null);
+    setFlyerUrl((evd as EventRow).flyer_url ?? null);
     setPendingImage(undefined);
+    setPendingFlyer(undefined);
     setSForm({
       name: evd.name, description: evd.description ?? '', location: evd.location ?? '',
       date: evd.event_date ?? '', time: (evd.event_time ?? '').slice(0, 5),
@@ -362,22 +367,29 @@ const OrganizerEventDetail = () => {
     }
     setSaving(true);
 
-    // Resolver el cambio de imagen: undefined = sin cambios, null = borrar, objeto = reemplazar
+    // Resolver los cambios de imagen: undefined = sin cambios, null = borrar, objeto = reemplazar
     let nextImageUrl = imageUrl;
-    if (pendingImage !== undefined) {
-      const oldPath = pathFromEventImageUrl(imageUrl);
-      if (pendingImage === null) {
-        nextImageUrl = null;
-      } else {
-        try {
-          nextImageUrl = (await uploadEventImage(pendingImage.blob, user.id)).url;
-        } catch (e: any) {
-          setSaving(false);
-          toast.error(e?.message ?? 'No se pudo subir la imagen');
-          return;
-        }
+    let nextFlyerUrl = flyerUrl;
+    try {
+      if (pendingFlyer !== undefined) {
+        const oldPath = pathFromEventImageUrl(flyerUrl);
+        nextFlyerUrl = pendingFlyer === null ? null : (await uploadEventImage(pendingFlyer.blob, user.id)).url;
+        await deleteEventImage(oldPath);
       }
-      await deleteEventImage(oldPath);
+      if (pendingImage !== undefined) {
+        const oldPath = pathFromEventImageUrl(imageUrl);
+        nextImageUrl = pendingImage === null ? null : (await uploadEventImage(pendingImage.blob, user.id)).url;
+        await deleteEventImage(oldPath);
+      }
+      // Si no hay miniatura pero sí flyer nuevo, la generamos recortando el flyer.
+      if (!nextImageUrl && pendingFlyer) {
+        const thumb = await thumbFromFlyer(pendingFlyer.blob);
+        nextImageUrl = (await uploadEventImage(thumb.blob, user.id)).url;
+      }
+    } catch (e: any) {
+      setSaving(false);
+      toast.error(e?.message ?? 'No se pudo subir la imagen');
+      return;
     }
 
     const { error } = await supabase.from('events').update({
@@ -385,6 +397,7 @@ const OrganizerEventDetail = () => {
       location: sForm.location || null,
       event_date: sForm.date || null, event_time: sForm.time || null,
       image_url: nextImageUrl,
+      flyer_url: nextFlyerUrl,
       is_public: sForm.is_public, status: sForm.status,
     }).eq('id', ev.id);
     setSaving(false);
@@ -821,6 +834,13 @@ const OrganizerEventDetail = () => {
                 </div>
                 <div><Label>Lugar</Label><Input value={sForm.location} onChange={(e) => setSForm({ ...sForm, location: e.target.value })} className="rounded-2xl" /></div>
                 <EventImageField
+                  variant="flyer"
+                  value={pendingFlyer === undefined ? flyerUrl : (pendingFlyer?.previewUrl ?? null)}
+                  onChange={setPendingFlyer}
+                  eventName={sForm.name || ev.name}
+                />
+                <EventImageField
+                  variant="thumb"
                   value={pendingImage === undefined ? imageUrl : (pendingImage?.previewUrl ?? null)}
                   onChange={setPendingImage}
                   eventName={sForm.name || ev.name}
