@@ -341,6 +341,13 @@ const OrganizerDashboard = () => {
             </div>
             <div><Label>Lugar *</Label><Input value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} className="rounded-2xl" /></div>
             <EventImageField
+              variant="flyer"
+              value={newFlyer?.previewUrl ?? null}
+              onChange={setNewFlyer}
+              eventName={newEvent.name}
+            />
+            <EventImageField
+              variant="thumb"
               value={newImage?.previewUrl ?? null}
               onChange={setNewImage}
               eventName={newEvent.name}
