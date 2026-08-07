@@ -26,7 +26,7 @@ const PublicEventPage = () => {
   useEffect(() => {
     (async () => {
       if (!id) return;
-      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,event_number,is_public,status,productora_id').eq('id', id).maybeSingle();
+      const { data: ev } = await supabase.from('events').select('id,name,description,event_date,event_time,location,image_url,flyer_url,event_number,is_public,status,productora_id').eq('id', id).maybeSingle();
       if (!ev) { setError('not_found'); setLoading(false); return; }
       if (ev.status !== 'active') { setError('inactive'); setLoading(false); return; }
       setEvent(ev);
@@ -69,10 +69,11 @@ const PublicEventPage = () => {
     setMeta('property', 'og:description', desc);
     setMeta('property', 'og:type', 'website');
     setMeta('property', 'og:url', window.location.href);
-    setMeta('name', 'twitter:card', event.image_url ? 'summary_large_image' : 'summary');
-    if (event.image_url) {
-      setMeta('property', 'og:image', event.image_url);
-      setMeta('name', 'twitter:image', event.image_url);
+    const shareImage = event.image_url || event.flyer_url;
+    setMeta('name', 'twitter:card', shareImage ? 'summary_large_image' : 'summary');
+    if (shareImage) {
+      setMeta('property', 'og:image', shareImage);
+      setMeta('name', 'twitter:image', shareImage);
     }
   }, [event]);
 
@@ -111,39 +112,72 @@ const PublicEventPage = () => {
         </div>
       </header>
 
-      {/* HERO */}
-      <section className="relative">
-        <div className="relative h-56 md:h-80 w-full overflow-hidden">
-          {event.image_url ? (
-            <div className="absolute inset-0" style={{ backgroundImage: `url(${event.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          ) : (
-            <div className="absolute inset-0 brand-hero-gradient flex items-center justify-center">
-              <span className="font-display font-bold text-6xl text-primary-foreground/40">{initials(event.name)}</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/40 to-foreground/10" />
-          <div className="absolute inset-x-0 bottom-0 max-w-4xl mx-auto px-4 sm:px-6 pb-6">
+      {/* HERO: si hay flyer se muestra completo (sin recortar), centrado */}
+      {event.flyer_url ? (
+        <section className="bg-secondary/40 border-b border-border">
+          <div className="max-w-4xl mx-auto sm:px-6 sm:py-8">
+            <img
+              src={event.flyer_url}
+              alt={`Flyer de ${event.name}`}
+              className="w-full sm:max-w-md sm:mx-auto sm:rounded-3xl sm:soft-shadow object-contain"
+            />
+          </div>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-6 pt-5 sm:pt-0 text-center">
             {!event.is_public && <Badge variant="secondary" className="mb-3">Privado</Badge>}
-            <h1 className="font-display font-bold text-3xl md:text-5xl text-primary-foreground drop-shadow">{event.name}</h1>
+            <h1 className="font-display font-bold text-3xl md:text-4xl">{event.name}</h1>
             {productora && (
-              <div className="mt-3 flex items-center gap-2">
-                <Avatar className="h-7 w-7 border border-primary-foreground/40">
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <Avatar className="h-7 w-7 border border-border">
                   {productora.logo_url && <AvatarImage src={productora.logo_url} alt={`Logo de ${productora.nombre}`} className="object-cover" />}
                   <AvatarFallback className="bg-card text-primary text-[10px] font-semibold">
                     {eventInitials(productora.nombre)}
                   </AvatarFallback>
                 </Avatar>
-                <p className="text-sm text-primary-foreground/90">
+                <p className="text-sm text-muted-foreground">
                   Organiza:{' '}
-                  <Link to={`/productora/${productora.slug}`} className="font-semibold underline underline-offset-2 hover:text-primary-foreground">
+                  <Link to={`/productora/${productora.slug}`} className="font-semibold text-foreground underline underline-offset-2 hover:text-primary">
                     {productora.nombre}
                   </Link>
                 </p>
               </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="relative">
+          <div className="relative h-56 md:h-80 w-full overflow-hidden">
+            {event.image_url ? (
+              <div className="absolute inset-0" style={{ backgroundImage: `url(${event.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            ) : (
+              <div className="absolute inset-0 brand-hero-gradient flex items-center justify-center">
+                <span className="font-display font-bold text-6xl text-primary-foreground/40">{initials(event.name)}</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/40 to-foreground/10" />
+            <div className="absolute inset-x-0 bottom-0 max-w-4xl mx-auto px-4 sm:px-6 pb-6">
+              {!event.is_public && <Badge variant="secondary" className="mb-3">Privado</Badge>}
+              <h1 className="font-display font-bold text-3xl md:text-5xl text-primary-foreground drop-shadow">{event.name}</h1>
+              {productora && (
+                <div className="mt-3 flex items-center gap-2">
+                  <Avatar className="h-7 w-7 border border-primary-foreground/40">
+                    {productora.logo_url && <AvatarImage src={productora.logo_url} alt={`Logo de ${productora.nombre}`} className="object-cover" />}
+                    <AvatarFallback className="bg-card text-primary text-[10px] font-semibold">
+                      {eventInitials(productora.nombre)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="text-sm text-primary-foreground/90">
+                    Organiza:{' '}
+                    <Link to={`/productora/${productora.slug}`} className="font-semibold underline underline-offset-2 hover:text-primary-foreground">
+                      {productora.nombre}
+                    </Link>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <Card className="rounded-3xl soft-shadow border-border">
